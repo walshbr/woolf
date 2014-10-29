@@ -11,9 +11,9 @@ raw_text = f.read()
 
 clean_text = raw_text.replace('\n', '')
 
-matches = re.findall(r'[“”]', clean_text)
-open_quote_indices = [m.start() for m in matches if m.group() == "“"]
-close_quote_indices = [m.start() for m in matches if m.group() == "”"]
+matches = list(re.finditer(ur'[“”]', clean_text))
+open_quote_indices = [m.start() for m in matches if m.group() == u"“"]
+close_quote_indices = [m.start() for m in matches if m.group() == u"”"]
 
 # grabs number of punctuated phrases in novel.
 number_of_punctuated_phrases = len(open_quote_indices)
@@ -29,5 +29,6 @@ raw_punctuated_phrases = "\n".join(ordered_punctuated_phrases)
 # punctuation marks.
 
 # next thing to do - get rid of the punctuation marks?
+print(number_of_punctuated_phrases)
 print(ordered_punctuated_phrases)
 print(raw_punctuated_phrases)
