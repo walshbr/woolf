@@ -1,7 +1,10 @@
+
+
+import codecs
 from collections import Iterable
 
-# Pulls in the text
-f = open('Mrs.Dalloway.txt', 'r')
+
+f = codecs.open('Mrs.Dalloway.txt', 'r', 'utf8')
 raw_text = f.read()
 
 # Cleans the text
