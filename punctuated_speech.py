@@ -21,8 +21,7 @@ ordered_punctuated_phrases = []
 for (i, j) in zip(open_quote_indices, close_quote_indices):
     ordered_punctuated_phrases.append(clean_text[i:j+1])
 
-raw_punctuated_phrases = []
-raw_punctuated_phrases = "".join(raw_punctuated_phrases)
+raw_punctuated_phrases = "\n".join(ordered_punctuated_phrases)
 
 # raw_punctuated phrases now has a string of all of the characters and
 # punctuation marks.
