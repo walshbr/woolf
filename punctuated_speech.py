@@ -6,12 +6,7 @@ f = open('Mrs.Dalloway.txt', 'r')
 raw_text = f.read()
 
 # Cleans the text
-clean_text = []
-for line in raw_text:
-	line = line.rstrip('\n')
-	clean_text.append(line)
-
-clean_text = "".join(clean_text)
+clean_text = raw_text.replace('\n', '')
 
 # Strips text into characters
 characters_list = list(clean_text)
