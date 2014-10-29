@@ -11,18 +11,12 @@ raw_text = f.read()
 
 clean_text = raw_text.replace('\n', '')
 
-matches = list(re.finditer(ur'[“”]', clean_text))
-open_quote_indices = [m.start() for m in matches if m.group() == u"“"]
-close_quote_indices = [m.start() for m in matches if m.group() == u"”"]
+matches = list(re.finditer(ur'“[^”]+”', clean_text))
 
 # grabs number of punctuated phrases in novel.
-number_of_punctuated_phrases = len(open_quote_indices)
+number_of_punctuated_phrases = len(matches)
 
-ordered_punctuated_phrases = []
-
-for (i, j) in zip(open_quote_indices, close_quote_indices):
-    ordered_punctuated_phrases.append(clean_text[i:j+1])
-
+ordered_punctuated_phrases = [m.group() for m in matches]
 raw_punctuated_phrases = "\n".join(ordered_punctuated_phrases)
 
 # raw_punctuated phrases now has a string of all of the characters and
