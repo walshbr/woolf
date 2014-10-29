@@ -17,22 +17,10 @@ close_quote_indices = [m.start() for m in matches if m.group() == "”"]
 # grabs number of punctuated phrases in novel.
 number_of_punctuated_phrases = len(open_quote_indices)
 
-punctuated_characters = []
-punctuated_indices = []
-punctuated_phrases = []
 ordered_punctuated_phrases = []
 
-
-# gathers the punctuated phrases into a list and stores them in
-# ordered_punctuated_phrases which maintains their order in the novel.
-
-
-i = 0
-for i in range(0, number_of_punctuated_phrases):
-    phrase_start = open_quote_indices[i]
-    phrase_end = close_quote_indices[i]
-    phrase_characters = characters_list[phrase_start:phrase_end+1]
-    ordered_punctuated_phrases.append(phrase_characters)
+for (i, j) in zip(open_quote_indices, close_quote_indices):
+    ordered_punctuated_phrases.append(clean_text[i:j+1])
 
 # compresses ordered_punctuated_phrases back together. previously it was just a
 # big list of individual characters.
