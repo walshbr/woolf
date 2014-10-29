@@ -2,29 +2,17 @@
 
 import codecs
 from collections import Iterable
+import re
 
 
 f = codecs.open('Mrs.Dalloway.txt', 'r', 'utf8')
 raw_text = f.read()
 
-# Cleans the text
 clean_text = raw_text.replace('\n', '')
 
-# Strips text into characters
-characters_list = list(clean_text)
-
-# Stores index positions of all open quotes and smart quotes
-open_quote_indices = []
-close_quote_indices = []
-characters_dict = dict(enumerate(characters_list))
-
-for key, value in characters_dict.items():
-    if value == "“":
-        open_quote_indices.append(key)
-    elif value == "”":
-        close_quote_indices.append(key)
-    else:
-        pass
+matches = re.findall(r'[“”]', clean_text)
+open_quote_indices = [m.start() for m in matches if m.group() == "“"]
+close_quote_indices = [m.start() for m in matches if m.group() == "”"]
 
 # grabs number of punctuated phrases in novel.
 number_of_punctuated_phrases = len(open_quote_indices)
