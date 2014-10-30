@@ -9,7 +9,7 @@ import re
 f = codecs.open('Mrs.Dalloway.txt', 'r', 'utf8')
 raw_text = f.read()
 
-clean_text = raw_text.replace('\n', '')
+clean_text = raw_text.replace('\n', '').lower()
 
 matches = list(re.finditer(ur'“[^”]+”', clean_text))
 
