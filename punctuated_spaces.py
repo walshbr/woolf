@@ -81,30 +81,32 @@ def is_punct(c):
 
 def tokenize(input_str):
     """This returns an iterator over the tokens in the string."""
-    rest = None
+    while True:
+        rest = None
 
-    # Since punctuations are always single characters, this isn't
-    # handled by `take_while`.
-    if is_punct(input_str[0]):
-        yield input_str[0]
-        rest = input_str[1:]
-
-    else:
-        # Try to match a string of letters or numbers. The first
-        # that succeeds, yield the token and stop trying.
-        for p in (unicode.isalpha, unicode.isdigit):
-            token, rest = take_while(p, input_str)
-            if token:
-                yield token
-                break
-        # If it wasn't a letter or number, skip a character.
-        else:
+        # Since punctuations are always single characters, this isn't
+        # handled by `take_while`.
+        if is_punct(input_str[0]):
+            yield input_str[0]
             rest = input_str[1:]
 
-    # If there's more to try, get its tokenize and yield them.
-    if rest:
-        for token in tokenize(rest):
-            yield token
+        else:
+            # Try to match a string of letters or numbers. The first
+            # that succeeds, yield the token and stop trying.
+            for p in (unicode.isalpha, unicode.isdigit):
+                token, rest = take_while(p, input_str)
+                if token:
+                    yield token
+                    break
+            # If it wasn't a letter or number, skip a character.
+            else:
+                rest = input_str[1:]
+
+        # If there's more to try, get its tokenize and yield them.
+        if rest:
+            input_str = rest
+        else:
+            return
 
 
 class VectorSpace(object):
