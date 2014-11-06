@@ -6,6 +6,7 @@ import codecs
 import collections
 import itertools
 import re
+import sys
 import unicodedata
 
 import matplotlib.pyplot as plt
@@ -79,34 +80,36 @@ def is_punct(c):
     return unicodedata.category(c)[0] == 'P'
 
 
-def tokenize(input_str):
+def get_unicode_category(unichars, prefix):
+    """\
+    This returns a generator over the unicode characters with a given major
+    category.
+    """
+    return (c for c in unichars if unicodedata.category(c)[0] == prefix)
+
+
+def make_token_re():
+    unichars = [unichr(c) for c in range(sys.maxunicode)]
+    punct_chars = re.escape(u''.join(get_unicode_category(unichars, 'P')))
+    word_chars = re.escape(u''.join(get_unicode_category(unichars, 'L')))
+    number_chars = re.escape(u''.join(get_unicode_category(unichars, 'N')))
+
+    re_token = re.compile(ur'''
+            (?P<punct>  [{}]  ) |
+            (?P<word>   [{}]+ ) |
+            (?P<number> [{}]+ ) |
+            (?P<trash>  .     )
+        '''.format(punct_chars, word_chars, number_chars),
+        re.VERBOSE,
+        )
+    return re_token
+
+
+def tokenize(input_str, token_re=make_token_re()):
     """This returns an iterator over the tokens in the string."""
-    while True:
-        rest = None
-
-        # Since punctuations are always single characters, this isn't
-        # handled by `take_while`.
-        if is_punct(input_str[0]):
-            yield input_str[0]
-            rest = input_str[1:]
-
-        else:
-            # Try to match a string of letters or numbers. The first
-            # that succeeds, yield the token and stop trying.
-            for p in (unicode.isalpha, unicode.isdigit):
-                token, rest = take_while(p, input_str)
-                if token:
-                    yield token
-                    break
-            # If it wasn't a letter or number, skip a character.
-            else:
-                rest = input_str[1:]
-
-        # If there's more to try, get its tokenize and yield them.
-        if rest:
-            input_str = rest
-        else:
-            return
+    return (
+        m.group() for m in token_re.finditer(input_str) if not m.group('trash')
+        )
 
 
 class VectorSpace(object):
@@ -202,8 +205,9 @@ def find_quotes(doc, start_quote=u'“', end_quote=u'”'):
 
 
 def main():
-    text = read_text(FILENAME)
+    text = clean_text(read_text(FILENAME))
     tokens = list(tokenize(text))
+
     for (start, end) in find_quotes(tokens):
         print(u'{},{}: {}'.format(start, end, ' '.join(tokens[start:end])))
 
