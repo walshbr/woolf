@@ -15,42 +15,53 @@ import matplotlib.path as path
 import numpy as np
 
 
-f = codecs.open('Mrs.Dalloway.txt', 'r', 'utf8')
-raw_text = f.read()
-print('{} characters read.'.format(len(raw_text)))
+FILENAME = 'Mrs.Dalloway.txt'
 
 
-clean_text = raw_text.replace('\n', '').lower()
-print(clean_text[:75] + '...')
+def read_text(filename):
+    """Read in the text from the file."""
+    with codecs.open(filename, 'r', 'utf8') as f:
+        return f.read()
 
 
-matches = list(re.finditer(ur'“[^”]+”', clean_text))
-print('{} quoted-quotes found.'.format(len(matches)))
+def clean_text(input_text):
+    """Clean the text by lowercasing and removing newlines."""
+    return input_text.replace('\n', '').lower()
 
 
-locations = [m.start() for m in matches]
-n, bins = np.histogram(locations, 500)
+def find_quoted_quotes(input_text):
+    """This returns the regex matches from finding the quoted quotes."""
+    return list(re.finditer(ur'“[^”]+”', input_text))
 
-fig, ax = plt.subplots()
 
-left = np.array(bins[:-1])
-right = np.array(bins[1:])
-bottom = np.zeros(len(left))
-top = bottom + n
+def create_location_histogram(matches, bin_count=500):
+    """\
+    This takes the regex matches and produces a histogram of where they
+    occurred in the document.
+    """
+    locations = [m.start() for m in matches]
+    n, bins = np.histogram(locations, bin_count)
 
-XY = np.array([[left, left, right, right], [bottom, top, top, bottom]]).T
+    fig, ax = plt.subplots()
 
-barpath = path.Path.make_compound_path_from_polys(XY)
+    left = np.array(bins[:-1])
+    right = np.array(bins[1:])
+    bottom = np.zeros(len(left))
+    top = bottom + n
 
-patch = patches.PathPatch(
-    barpath, facecolor='blue', edgecolor='gray', alpha=0.8,
-    )
-ax.add_patch(patch)
+    XY = np.array([[left, left, right, right], [bottom, top, top, bottom]]).T
 
-ax.set_xlim(left[0], right[-1])
-ax.set_ylim(bottom.min(), top.max())
+    barpath = path.Path.make_compound_path_from_polys(XY)
 
-plt.show()
+    patch = patches.PathPatch(
+        barpath, facecolor='blue', edgecolor='gray', alpha=0.8,
+        )
+    ax.add_patch(patch)
+
+    ax.set_xlim(left[0], right[-1])
+    ax.set_ylim(bottom.min(), top.max())
+
+    plt.show()
 
 
 def take_while(pred, input_str):
@@ -95,10 +106,14 @@ def tokenize(input_str):
         for token in tokenize(rest):
             yield token
 
-print(list(tokenize(matches[0].group())))
-
 
 class VectorSpace(object):
+    """\
+    This manages creating a vector space model of a corpus of documents. It
+    makes sure that the indexes are consistent.
+
+    Vectors of numpy arrays.
+    """
 
     def __init__(self):
         self.by_index = {}
@@ -140,6 +155,10 @@ class VectorSpace(object):
                     )
         return np.array(v)
 
+    def get(self, vector, key):
+        """This looks up the key in the vector given."""
+        return vector[self.lookup_index(key)]
+
     def pad(self, array):
         """\
         This pads a numpy array to match the dimensions of this vector space.
@@ -147,14 +166,14 @@ class VectorSpace(object):
         padding = np.zeros(len(self) - len(array))
         return np.concatenate((array, padding))
 
-
-vs = VectorSpace()
-
-corpus = [list(tokenize(m.group())) for m in matches]
-vs_corpus = [vs.vectorize(doc) for doc in corpus]
-vs_corpus = [vs.pad(d) for d in vs_corpus]
-
-vs_corpus[0][vs.lookup_index('the')]
+    def vectorize_corpus(self, corpus):
+        """\
+        This converts a corpus (tokenized documents) into a collection of
+        vectors.
+        """
+        vectors = [self.vectorize(doc) for doc in corpus]
+        vectors = [self.pad(doc) for doc in vectors]
+        return vectors
 
 
 def frequencies(corpus):
@@ -162,7 +181,3 @@ def frequencies(corpus):
     return collections.Counter(
         itertools.ifilter(lambda t: not (len(t) == 1 and is_punct(t)),
                           itertools.chain.from_iterable(corpus)))
-
-freqs = frequencies(corpus)
-for (token, freq) in freqs.most_common(25):
-    print(u'{}\t{}'.format(token, freq))
