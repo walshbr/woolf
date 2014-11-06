@@ -181,3 +181,30 @@ def frequencies(corpus):
     return collections.Counter(
         itertools.ifilter(lambda t: not (len(t) == 1 and is_punct(t)),
                           itertools.chain.from_iterable(corpus)))
+
+
+def find_quotes(doc, start_quote='“', end_quote='”'):
+    """\
+    This takes a tokenized document (with punctuation maintained) and returns
+    tuple pairs of the beginning and ending indexes of the quoted quotes.
+    """
+    start = 0
+    while start <= len(doc):
+        try:
+            start_quote_pos = doc.index(start_quote, start)
+            end_quote_pos = doc.index(end_quote, start_quote_pos)
+        except ValueError:
+            return
+        yield (start_quote_pos, end_quote_pos)
+        start = end_quote_pos
+
+
+def main():
+    text = read_text(FILENAME)
+    tokens = list(tokenize(text))
+    for (start, end) in find_quotes(tokens):
+        print(' '.join(tokens[start:end]))
+
+
+if __name__ == '__main__':
+    main()
