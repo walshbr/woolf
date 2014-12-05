@@ -16,7 +16,7 @@ import matplotlib.path as path
 import numpy as np
 
 
-FILENAME = 'Mrs.Dalloway.txt'
+FILENAME = 'dalloway.txt'
 
 
 def read_text(filename):
@@ -32,7 +32,7 @@ def clean_text(input_text):
 
 def find_quoted_quotes(input_text):
     """This returns the regex matches from finding the quoted quotes."""
-    return list(re.finditer(ur'“[^”]+”', input_text))
+    return list(re.finditer(ur'"[^"]+"', input_text))
 
 
 def create_location_histogram(matches, bin_count=500):
