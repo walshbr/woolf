@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 
 
@@ -32,7 +32,7 @@ def clean_text(input_text):
 
 def find_quoted_quotes(input_text):
     """This returns the regex matches from finding the quoted quotes."""
-    return list(re.finditer(ur'"[^"]+"', input_text))
+    return list(re.finditer(r'"[^"]+"', input_text))
 
 
 def create_location_histogram(matches, bin_count=500):
@@ -89,12 +89,12 @@ def get_unicode_category(unichars, prefix):
 
 
 def make_token_re():
-    unichars = [unichr(c) for c in range(sys.maxunicode)]
-    punct_chars = re.escape(u''.join(get_unicode_category(unichars, 'P')))
-    word_chars = re.escape(u''.join(get_unicode_category(unichars, 'L')))
-    number_chars = re.escape(u''.join(get_unicode_category(unichars, 'N')))
+    unichars = [chr(c) for c in range(sys.maxunicode)]
+    punct_chars = re.escape(''.join(get_unicode_category(unichars, 'P')))
+    word_chars = re.escape(''.join(get_unicode_category(unichars, 'L')))
+    number_chars = re.escape(''.join(get_unicode_category(unichars, 'N')))
 
-    re_token = re.compile(ur'''
+    re_token = re.compile(r'''
             (?P<punct>  [{}]  ) |
             (?P<word>   [{}]+ ) |
             (?P<number> [{}]+ ) |
