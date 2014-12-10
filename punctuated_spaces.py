@@ -5,6 +5,7 @@
 import codecs
 import collections
 import itertools
+import os
 import re
 import sys
 import unicodedata
@@ -16,7 +17,7 @@ import matplotlib.path as path
 import numpy as np
 
 
-FILENAME = 'dalloway.txt'
+CORPUS = 'corpus'
 
 
 def read_text(filename):
@@ -188,7 +189,7 @@ def frequencies(corpus):
                           itertools.chain.from_iterable(corpus)))
 
 
-def find_quotes(doc, start_quote=u'“', end_quote=u'”'):
+def find_quotes(doc, start_quote='“', end_quote='”'):
     """\
     This takes a tokenized document (with punctuation maintained) and returns
     tuple pairs of the beginning and ending indexes of the quoted quotes.
@@ -197,19 +198,29 @@ def find_quotes(doc, start_quote=u'“', end_quote=u'”'):
     while start <= len(doc):
         try:
             start_quote_pos = doc.index(start_quote, start)
-            end_quote_pos = doc.index(end_quote, start_quote_pos)
+            end_quote_pos = doc.index(end_quote, start_quote_pos + 1)
         except ValueError:
             return
         yield (start_quote_pos, end_quote_pos + 1)
         start = end_quote_pos
 
 
-def main():
-    text = clean_text(read_text(FILENAME))
-    tokens = list(tokenize(text))
+def tokenize_file(filename):
+    text = clean_text(read_text(filename))
+    return list(tokenize(text))
 
-    for (start, end) in find_quotes(tokens):
-        print(u'{},{}: {}'.format(start, end, ' '.join(tokens[start:end])))
+
+def main():
+    for (root, _, files) in os.walk(CORPUS):
+        for fn in files:
+            print('{}\n{}\n\n'.format(fn, '=' * len(fn)))
+
+            tokens = tokenize_file(os.path.join(root, fn))
+            for (start, end) in find_quotes(tokens, '"', '"'):
+                quote = ' '.join(tokens[start:end])
+                print('{},{}: {}'.format(start, end, quote))
+
+            print('\n')
 
 
 if __name__ == '__main__':
