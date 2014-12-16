@@ -224,7 +224,8 @@ def number_of_quotes():
             text = clean_text(read_text(os.path.join(root, fn)))
             matches = find_quoted_quotes(text)
             count = len(matches)
-            print("Number of quoted sentences in {}: {}".format(fn, count))   
+            print("Number of quoted sentences in {}: {}".format(fn, count)) 
+              
 def main():
     counter = 0
     # for (root, _, files) in os.walk(CORPUS):
