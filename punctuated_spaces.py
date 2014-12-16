@@ -218,23 +218,29 @@ def pause():
     """
     input("Paused. Type any key to continue.")
 
-def main():
+def number_of_quotes():
     for (root, _, files) in os.walk(CORPUS):
         for fn in files:
-            print('{}\n{}\n\n'.format(fn, '=' * len(fn)))
+            text = clean_text(read_text(os.path.join(root, fn)))
+            matches = find_quoted_quotes(text)
+            count = len(matches)
+            print("Number of quoted sentences in {}: {}".format(fn, count))   
+def main():
+    counter = 0
+    for (root, _, files) in os.walk(CORPUS):
+        for fn in files:
+            # print('{}\n{}\n\n'.format(fn, '=' * len(fn)))
             # create_location_histogram(os.path.join(root, fn))
 
-            tokens = tokenize_file(os.path.join(root, fn))
-            for (start, end) in find_quotes(tokens, '"', '"'):
-                quote = ' '.join(tokens[start:end])
-                print('{},{}: {}'.format(start, end, quote))
-                pause()
+            # tokens = tokenize_file(os.path.join(root, fn))
+            # for (start, end) in find_quotes(tokens, '"', '"'):
+            #     quote = ' '.join(tokens[start:end])
+            #     print('{},{}: {}'.format(start, end, quote))
+            number_of_quotes()
             print('\n')
+            pause()
 
-# fix long mass quotes. So write now as it goes through the quotes.
-# it starts each new list of quotes from the previous ending quote.
-# So we want it to skip that quote. Though this would break entirely
-# if there were a sentence without a closing quotation.
-
+# i want it to output a list of the number of quoted sentences in each text.
+# find_quoted_quotes produces an array of the quoted sentences. So len(that array) gives me what I want.
 if __name__ == '__main__':
     main()
