@@ -28,7 +28,7 @@ def read_text(filename):
 
 def clean_text(input_text):
     """Clean the text by lowercasing and removing newlines."""
-    return input_text.replace('\n', '').lower()
+    return input_text.replace('\n', ' ').lower()
 
 
 def find_quoted_quotes(input_text):
@@ -36,11 +36,13 @@ def find_quoted_quotes(input_text):
     return list(re.finditer(r'"[^"]+"', input_text))
 
 
-def create_location_histogram(matches, bin_count=500):
+def create_location_histogram(file, bin_count=500):
     """\
     This takes the regex matches and produces a histogram of where they
     occurred in the document.
     """
+    text = clean_text(read_text(file))
+    matches = find_quoted_quotes(text)
     locations = [m.start() for m in matches]
     n, bins = np.histogram(locations, bin_count)
 
@@ -209,19 +211,28 @@ def tokenize_file(filename):
     text = clean_text(read_text(filename))
     return list(tokenize(text))
 
+def pause():
+    """\
+    Pauses between each text when processing groups of texts together
+    for debugging, mostly, but also to analyze output.
+    """
+    input("Paused. Type any key to continue.")
 
 def main():
     for (root, _, files) in os.walk(CORPUS):
         for fn in files:
             print('{}\n{}\n\n'.format(fn, '=' * len(fn)))
+            # create_location_histogram(os.path.join(root, fn))
 
             tokens = tokenize_file(os.path.join(root, fn))
             for (start, end) in find_quotes(tokens, '"', '"'):
                 quote = ' '.join(tokens[start:end])
                 print('{},{}: {}'.format(start, end, quote))
-
+                pause()
             print('\n')
 
+#Two things to do - fix spaces lost to new lines.
+# fix long mass quotes.
 
 if __name__ == '__main__':
     main()
