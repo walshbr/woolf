@@ -30,6 +30,9 @@ def clean_text(input_text):
     """Clean the text by lowercasing and removing newlines."""
     return input_text.replace('\n', ' ').lower()
 
+def clean_and_read_text(input_text):
+    
+    return clean_text(read_text(input_text))
 
 def find_quoted_quotes(input_text):
     """This returns the regex matches from finding the quoted quotes."""
@@ -185,7 +188,7 @@ class VectorSpace(object):
 
 
 def frequencies(corpus):
-    """This takes a list of list of tokens and returns a `Counter`."""
+    """This takes a list of tokens and returns a `Counter`."""
     return collections.Counter(
         itertools.ifilter(lambda t: not (len(t) == 1 and is_punct(t)),
                           itertools.chain.from_iterable(corpus)))
@@ -225,7 +228,7 @@ def number_of_quotes():
             matches = find_quoted_quotes(text)
             count = len(matches)
             print("Number of quoted sentences in {}: {}".format(fn, count)) 
-              
+
 def main():
     counter = 0
     # for (root, _, files) in os.walk(CORPUS):
@@ -241,7 +244,14 @@ def main():
     print('\n')
     pause()
 
-# i want it to output a list of the number of quoted sentences in each text.
-# find_quoted_quotes produces an array of the quoted sentences. So len(that array) gives me what I want.
 if __name__ == '__main__':
     main()
+
+# To do:
+# Calc percentages of each text that is quoted material.
+
+# Refactoring ideas: make it so that the os.path, etc. thing is simplified.
+# so that the various functions you call multiple times (like read and clean_text)
+# are simplified. Also make sure, once all the functions are written, that you don't have
+# redundant cleaning of texts and looping through the corpus.
+
