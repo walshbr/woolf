@@ -222,17 +222,20 @@ def pause():
     input("Paused. Type any key to continue.")
 
 def calc_number_of_quotes(file):
-            text = clean_and_read_text(file)
-            matches = find_quoted_quotes(text)
-            count = len(matches)
-            return count 
+    text = clean_and_read_text(file)
+    matches = find_quoted_quotes(text)
+    count = len(matches)
+    return count 
 
 def list_number_of_quotes(file, count):           
     print("Number of quoted sentences in {}: {}".format(file, count))
 
-# def percent_quoted(file):
-#     text = clean_and_read_text(file)
-#     number_of_quotes
+def percent_quoted(file):
+    number_of_quotes = calc_number_of_quotes(file)
+    number_of_non_quotes = calc_number_of_non_quotes(file)
+    percent = number_of_quotes / number_of_non_quotes
+    print(percent)
+
 def main():
     counter = 0
     for (root, _, files) in os.walk(CORPUS):
@@ -245,7 +248,7 @@ def main():
             #     quote = ' '.join(tokens[start:end])
             #     print('{},{}: {}'.format(start, end, quote))
             count = calc_number_of_quotes(os.path.join(root, fn))
-            list_number_of_quotes(fn, count)
+            percent_quoted(os.path.join(root, fn))
     print('\n')
     pause()
 
