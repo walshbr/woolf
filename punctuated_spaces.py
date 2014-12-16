@@ -227,8 +227,8 @@ def number_of_quotes():
             print("Number of quoted sentences in {}: {}".format(fn, count))   
 def main():
     counter = 0
-    for (root, _, files) in os.walk(CORPUS):
-        for fn in files:
+    # for (root, _, files) in os.walk(CORPUS):
+    #     for fn in files:
             # print('{}\n{}\n\n'.format(fn, '=' * len(fn)))
             # create_location_histogram(os.path.join(root, fn))
 
@@ -236,9 +236,9 @@ def main():
             # for (start, end) in find_quotes(tokens, '"', '"'):
             #     quote = ' '.join(tokens[start:end])
             #     print('{},{}: {}'.format(start, end, quote))
-            number_of_quotes()
-            print('\n')
-            pause()
+    number_of_quotes()
+    print('\n')
+    pause()
 
 # i want it to output a list of the number of quoted sentences in each text.
 # find_quoted_quotes produces an array of the quoted sentences. So len(that array) gives me what I want.
