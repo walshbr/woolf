@@ -204,7 +204,7 @@ def find_quotes(doc, start_quote='“', end_quote='”'):
         except ValueError:
             return
         yield (start_quote_pos, end_quote_pos + 1)
-        start = end_quote_pos
+        start = end_quote_pos + 1
 
 
 def tokenize_file(filename):
@@ -231,8 +231,10 @@ def main():
                 pause()
             print('\n')
 
-#Two things to do - fix spaces lost to new lines.
-# fix long mass quotes.
+# fix long mass quotes. So write now as it goes through the quotes.
+# it starts each new list of quotes from the previous ending quote.
+# So we want it to skip that quote. Though this would break entirely
+# if there were a sentence without a closing quotation.
 
 if __name__ == '__main__':
     main()
