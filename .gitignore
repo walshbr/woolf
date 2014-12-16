@@ -4,6 +4,7 @@ bin/
 man/
 pyvenv.cfg
 share/
+histograms/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
