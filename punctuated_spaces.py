@@ -31,7 +31,6 @@ def clean_text(input_text):
     return input_text.replace('\n', ' ').lower()
 
 def clean_and_read_text(input_text):
-
     return clean_text(read_text(input_text))
 
 def find_quoted_quotes(input_text):
@@ -227,13 +226,20 @@ def calc_number_of_quotes(file):
     count = len(matches)
     return count 
 
+def calc_number_of_non_quotes(file):
+    text = clean_and_read_text(file)
+    text = text.replace(' ', '')
+    text = text.replace('\\', '')
+    count = len(text)
+    return count
+
 def list_number_of_quotes(file, count):           
     print("Number of quoted sentences in {}: {}".format(file, count))
 
 def percent_quoted(file):
     number_of_quotes = calc_number_of_quotes(file)
     number_of_non_quotes = calc_number_of_non_quotes(file)
-    percent = number_of_quotes / number_of_non_quotes
+    percent = 100 * (number_of_quotes / number_of_non_quotes)
     print(percent)
 
 def main():
@@ -249,6 +255,7 @@ def main():
             #     print('{},{}: {}'.format(start, end, quote))
             count = calc_number_of_quotes(os.path.join(root, fn))
             percent_quoted(os.path.join(root, fn))
+            # calc_number_of_non_quotes(os.path.join(root, fn))
     print('\n')
     pause()
 
@@ -256,10 +263,12 @@ if __name__ == '__main__':
     main()
 
 # To do:
-# Calc percentages of each text that is quoted material.
+# Calc percentages of each text that is quoted material. You'll eventually want to calculate non-speech vs speech
+# percentages as well.
 
 # Refactoring ideas: make it so that the os.path, etc. thing is simplified.
 # Also make sure, once all the functions are written, that you don't have
 # redundant cleaning of texts and looping through the corpus.
-# It's currently preserving \s for every quote. Do we want to keep that? Presumably?
+# It's currently preserving \s for every quote. Do we want to keep that? Presumably? It's going to throw off
+# The percentages though.
 
