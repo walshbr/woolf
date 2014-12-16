@@ -31,7 +31,7 @@ def clean_text(input_text):
     return input_text.replace('\n', ' ').lower()
 
 def clean_and_read_text(input_text):
-    
+
     return clean_text(read_text(input_text))
 
 def find_quoted_quotes(input_text):
@@ -44,7 +44,7 @@ def create_location_histogram(file, bin_count=500):
     This takes the regex matches and produces a histogram of where they
     occurred in the document.
     """
-    text = clean_text(read_text(file))
+    text = clean_and_read_text(file)
     matches = find_quoted_quotes(text)
     locations = [m.start() for m in matches]
     n, bins = np.histogram(locations, bin_count)
@@ -211,28 +211,32 @@ def find_quotes(doc, start_quote='“', end_quote='”'):
 
 
 def tokenize_file(filename):
-    text = clean_text(read_text(filename))
+    text = clean_and_read_text(filename)
     return list(tokenize(text))
 
 def pause():
     """\
     Pauses between each text when processing groups of texts together
-    for debugging, mostly, but also to analyze output.
+    for debugging, mostly, but also to analyze the sometimes really long output.
     """
     input("Paused. Type any key to continue.")
 
-def number_of_quotes():
-    for (root, _, files) in os.walk(CORPUS):
-        for fn in files:
-            text = clean_text(read_text(os.path.join(root, fn)))
+def calc_number_of_quotes(file):
+            text = clean_and_read_text(file)
             matches = find_quoted_quotes(text)
             count = len(matches)
-            print("Number of quoted sentences in {}: {}".format(fn, count)) 
+            return count 
 
+def list_number_of_quotes(file, count):           
+    print("Number of quoted sentences in {}: {}".format(file, count))
+
+# def percent_quoted(file):
+#     text = clean_and_read_text(file)
+#     number_of_quotes
 def main():
     counter = 0
-    # for (root, _, files) in os.walk(CORPUS):
-    #     for fn in files:
+    for (root, _, files) in os.walk(CORPUS):
+        for fn in files:
             # print('{}\n{}\n\n'.format(fn, '=' * len(fn)))
             # create_location_histogram(os.path.join(root, fn))
 
@@ -240,7 +244,8 @@ def main():
             # for (start, end) in find_quotes(tokens, '"', '"'):
             #     quote = ' '.join(tokens[start:end])
             #     print('{},{}: {}'.format(start, end, quote))
-    number_of_quotes()
+            count = calc_number_of_quotes(os.path.join(root, fn))
+            list_number_of_quotes(fn, count)
     print('\n')
     pause()
 
@@ -251,7 +256,7 @@ if __name__ == '__main__':
 # Calc percentages of each text that is quoted material.
 
 # Refactoring ideas: make it so that the os.path, etc. thing is simplified.
-# so that the various functions you call multiple times (like read and clean_text)
-# are simplified. Also make sure, once all the functions are written, that you don't have
+# Also make sure, once all the functions are written, that you don't have
 # redundant cleaning of texts and looping through the corpus.
+# It's currently preserving \s for every quote. Do we want to keep that? Presumably?
 
