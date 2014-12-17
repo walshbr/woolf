@@ -151,10 +151,11 @@ def calc_number_of_quotes(file):
     # matches into a big string for processing.
     text = clean_and_read_text(file)
     matches = find_quoted_quotes(text)
-    text_string = ""
+
+    count = 0
     for match in matches:
-        text_string = text_string + match.group(0)
-    count = len(text_string)
+        count += len(match.group(0))
+
     return count
 
 
