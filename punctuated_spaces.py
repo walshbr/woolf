@@ -221,14 +221,18 @@ def pause():
     input("Paused. Type any key to continue.")
 
 def calc_number_of_quotes(file):
+    # Working here next time. you need to figure out a way to convert the matches into a big string for processing.
     text = clean_and_read_text(file)
     matches = find_quoted_quotes(text)
+    locations = []
+    for m in matches:
+        locations = locations.push[m.start():m.end()]
+    print(locations[matches])
     count = len(matches)
     return count 
 
 def calc_number_of_non_quotes(file):
     text = clean_and_read_text(file)
-    text = text.replace(' ', '')
     text = text.replace('\\', '')
     count = len(text)
     return count
@@ -254,8 +258,8 @@ def main():
             #     quote = ' '.join(tokens[start:end])
             #     print('{},{}: {}'.format(start, end, quote))
             count = calc_number_of_quotes(os.path.join(root, fn))
-            percent_quoted(os.path.join(root, fn))
-            # calc_number_of_non_quotes(os.path.join(root, fn))
+            # percent_quoted(os.path.join(root, fn))
+            calc_number_of_quotes(os.path.join(root, fn))
     print('\n')
     pause()
 
@@ -263,8 +267,10 @@ if __name__ == '__main__':
     main()
 
 # To do:
-# Calc percentages of each text that is quoted material. You'll eventually want to calculate non-speech vs speech
+# Currently the percentages are wrong - they're counting quoted sentences not characters. You'll eventually want to calculate non-speech vs speech
 # percentages as well.
+
+# also note that you get one funky match at the end - match='"i shall go and talk to him.  i shall say goodnig>, and you're losing the next quote.
 
 # Refactoring ideas: make it so that the os.path, etc. thing is simplified.
 # Also make sure, once all the functions are written, that you don't have
