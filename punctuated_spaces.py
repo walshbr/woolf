@@ -159,7 +159,7 @@ def calc_number_of_quotes(file):
     return count
 
 
-def calc_number_of_non_quotes(file):
+def calc_total_chars(file):
     text = clean_and_read_text(file)
     text = text.replace('\\', '')
     count = len(text)
@@ -172,8 +172,8 @@ def list_number_of_quotes(file, count):
 
 def percent_quoted(file):
     number_of_quotes = calc_number_of_quotes(file)
-    number_of_non_quotes = calc_number_of_non_quotes(file)
-    percent = 100 * (number_of_quotes / number_of_non_quotes)
+    number_of_chars = calc_total_chars(file)
+    percent = 100 * (number_of_quotes / number_of_chars)
     print("The percentage of {} that occurs in quoted text is {}"
           .format(file, percent))
 
