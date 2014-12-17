@@ -72,16 +72,6 @@ def create_location_histogram(file, bin_count=500):
     plt.show()
 
 
-def take_while(pred, input_str):
-    """This returns the prefix of a string that matches pred,
-    and the suffix where the match stops."""
-    for (i, c) in enumerate(input_str):
-        if not pred(c):
-            return (input_str[:i], input_str[i:])
-    else:
-        return (input_str, "")
-
-
 def is_punct(c):
     """Since `unicode` doesn't have a punctuation predicate..."""
     return unicodedata.category(c)[0] == 'P'
@@ -117,75 +107,6 @@ def tokenize(input_str, token_re=make_token_re()):
     return (
         m.group() for m in token_re.finditer(input_str) if not m.group('trash')
         )
-
-
-class VectorSpace(object):
-    """\
-    This manages creating a vector space model of a corpus of documents. It
-    makes sure that the indexes are consistent.
-
-    Vectors of numpy arrays.
-    """
-
-    def __init__(self):
-        self.by_index = {}
-        self.by_token = {}
-
-    def __len__(self):
-        return len(self.by_index)
-
-    def get_index(self, token):
-        """If it doesn't have an index for the token, create one."""
-        try:
-            i = self.by_token[token]
-        except KeyError:
-            i = len(self.by_token)
-            self.by_token[token] = i
-            self.by_index[i] = token
-        return i
-
-    def lookup_token(self, i):
-        """Returns None if there is no token at that position."""
-        return self.by_index.get(i)
-
-    def lookup_index(self, token):
-        """Returns None if there is no index for that token."""
-        return self.by_token.get(token)
-
-    def vectorize(self, token_seq):
-        """This turns a list of tokens into a numpy array."""
-        v = [0] * len(self.by_token)
-        for token in token_seq:
-            i = self.get_index(token)
-            if i < len(v):
-                v[i] += 1
-            elif i == len(v):
-                v.append(1)
-            else:
-                raise Exception(
-                    "Invalid index {} (len = {})".format(i, len(v)),
-                    )
-        return np.array(v)
-
-    def get(self, vector, key):
-        """This looks up the key in the vector given."""
-        return vector[self.lookup_index(key)]
-
-    def pad(self, array):
-        """\
-        This pads a numpy array to match the dimensions of this vector space.
-        """
-        padding = np.zeros(len(self) - len(array))
-        return np.concatenate((array, padding))
-
-    def vectorize_corpus(self, corpus):
-        """\
-        This converts a corpus (tokenized documents) into a collection of
-        vectors.
-        """
-        vectors = [self.vectorize(doc) for doc in corpus]
-        vectors = [self.pad(doc) for doc in vectors]
-        return vectors
 
 
 def frequencies(corpus):
