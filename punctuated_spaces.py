@@ -224,12 +224,11 @@ def calc_number_of_quotes(file):
     # Working here next time. you need to figure out a way to convert the matches into a big string for processing.
     text = clean_and_read_text(file)
     matches = find_quoted_quotes(text)
-    locations = []
-    for m in matches:
-        locations = locations.push[m.start():m.end()]
-    print(locations[matches])
-    count = len(matches)
-    return count 
+    text_string = ""
+    for match in matches:
+        text_string = text_string + match.group(0)
+    count = len(text_string)
+    return count
 
 def calc_number_of_non_quotes(file):
     text = clean_and_read_text(file)
@@ -244,7 +243,7 @@ def percent_quoted(file):
     number_of_quotes = calc_number_of_quotes(file)
     number_of_non_quotes = calc_number_of_non_quotes(file)
     percent = 100 * (number_of_quotes / number_of_non_quotes)
-    print(percent)
+    print("The percentage of {} that occurs in quoted text is {}".format(file, percent))
 
 def main():
     counter = 0
@@ -257,17 +256,20 @@ def main():
             # for (start, end) in find_quotes(tokens, '"', '"'):
             #     quote = ' '.join(tokens[start:end])
             #     print('{},{}: {}'.format(start, end, quote))
-            count = calc_number_of_quotes(os.path.join(root, fn))
+            # count = calc_number_of_quotes(os.path.join(root, fn))
             # percent_quoted(os.path.join(root, fn))
-            calc_number_of_quotes(os.path.join(root, fn))
+            percent_quoted(os.path.join(root, fn))
+            pause()
     print('\n')
-    pause()
+
 
 if __name__ == '__main__':
     main()
 
 # To do:
-# Currently the percentages are wrong - they're counting quoted sentences not characters. You'll eventually want to calculate non-speech vs speech
+# percent_quoted seems to be working now, though 69% quoted for Night and Day seems crazy high.
+ 
+# You'll eventually want to calculate non-speech vs speech
 # percentages as well.
 
 # also note that you get one funky match at the end - match='"i shall go and talk to him.  i shall say goodnig>, and you're losing the next quote.
