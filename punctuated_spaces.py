@@ -5,6 +5,7 @@
 import codecs
 import collections
 import itertools
+import operator
 import os
 import re
 import sys
@@ -15,6 +16,8 @@ import matplotlib.patches as patches
 import matplotlib.path as path
 
 import numpy as np
+
+from sklearn.feature_extraction.text import CountVectorizer
 
 
 CORPUS = 'corpus'
@@ -178,21 +181,38 @@ def percent_quoted(file):
           .format(file, percent))
 
 
-def main():
-    for (root, _, files) in os.walk(CORPUS):
+def all_files(dirname):
+    for (root, _, files) in os.walk(dirname):
         for fn in files:
-            # print('{}\n{}\n\n'.format(fn, '=' * len(fn)))
-            # create_location_histogram(os.path.join(root, fn))
+            yield os.path.join(root, fn)
 
-            # tokens = tokenize_file(os.path.join(root, fn))
-            # for (start, end) in find_quotes(tokens, '"', '"'):
-            #     quote = ' '.join(tokens[start:end])
-            #     print('{},{}: {}'.format(start, end, quote))
-            # count = calc_number_of_quotes(os.path.join(root, fn))
-            # percent_quoted(os.path.join(root, fn))
-            percent_quoted(os.path.join(root, fn))
-            pause()
-    print('\n')
+
+def top_items(vectorizer, array, n=10):
+    inv_vocab = dict((v, k) for (k, v) in vectorizer.vocabulary_.items())
+    for row in array:
+        indexes = list(enumerate(row))
+        indexes.sort(key=operator.itemgetter(1), reverse=True)
+        top = [(i, inv_vocab[i], c) for (i, c) in indexes[:n]]
+        yield top
+
+
+def main():
+    v = CountVectorizer(
+        input='filename',
+        tokenizer=tokenize,
+        stop_words='english',
+        )
+
+    files = list(all_files(CORPUS))
+    corpus = v.fit_transform(files)
+    a = corpus.toarray()
+
+    for (fn, top) in zip(files, top_items(v, a)):
+        print(fn)
+        print('=' * len(fn))
+        for row in top:
+            print('{0[0]:>6}. {0[1]:<12}\t{0[2]:>5}'.format(row))
+        print()
 
 
 if __name__ == '__main__':
