@@ -17,7 +17,7 @@ import matplotlib.path as path
 
 import numpy as np
 
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 
 
 CORPUS = 'corpus'
@@ -196,23 +196,32 @@ def top_items(vectorizer, array, n=10):
         yield top
 
 
-def main():
-    v = CountVectorizer(
-        input='filename',
-        tokenizer=tokenize,
-        stop_words='english',
-        )
-
-    files = list(all_files(CORPUS))
-    corpus = v.fit_transform(files)
+def vectorizer_report(title, klass, filenames, **kwargs):
+    params = {
+        'input': 'filename',
+        'tokenizer': tokenize,
+        'stop_words': 'english',
+        }
+    params.update(kwargs)
+    v = klass(**params)
+    corpus = v.fit_transform(filenames)
     a = corpus.toarray()
 
-    for (fn, top) in zip(files, top_items(v, a)):
-        print(fn)
-        print('=' * len(fn))
+    print('# {}\n'.format(title))
+    for (fn, top) in zip(filenames, top_items(v, a)):
+        print('## {}\n'.format(fn))
         for row in top:
             print('{0[0]:>6}. {0[1]:<12}\t{0[2]:>5}'.format(row))
         print()
+
+
+def main():
+    files = list(all_files(CORPUS))
+    remove_short = lambda s: filter(lambda x: len(x) > 1, tokenize(s))
+    vectorizer_report(
+        'Raw Frequencies', CountVectorizer, files, tokenizer=remove_short,
+        )
+    vectorizer_report('Tf-Idf', TfidfVectorizer, files, tokenizer=remove_short)
 
 
 if __name__ == '__main__':
