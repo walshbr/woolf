@@ -273,7 +273,7 @@ def main():
     #         print_for_debug(find_quoted_quotes(text))
     #         pause()
     # print('\n')
-    text = clean_and_read_text("corpus/night_and_day.txt")
+    text = clean_and_read_text("corpus/voyage.txt")
     print_matches_for_debug(find_quoted_quotes(text))
 
 if __name__ == '__main__':
