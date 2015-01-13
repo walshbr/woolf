@@ -25,15 +25,6 @@ def read_text(filename):
     with codecs.open(filename, 'r', 'utf8') as f:
         return f.read()
 
-def print_matches_for_debug(input_text):
-    """Takes a list of matches and prints them out to a new file 'debug.txt' for debugging."""
-    text = open('debug.txt', 'w')
-    counter = 0
-    for match in input_text:
-        text.write("Match %(counter)i: " % locals() + match.group(0) + "\n")
-        counter+=1
-    text.close
-
 def clean_text(input_text):
     """Clean the text by lowercasing and removing newlines."""
     return input_text.replace('\n', ' ').lower()
@@ -41,10 +32,29 @@ def clean_text(input_text):
 def clean_and_read_text(input_text):
     return clean_text(read_text(input_text))
 
+def quotations_check(filename):
+    """Checks if a file has an even number of quotes."""
+    text = clean_and_read_text(filename)
+    if len(list(re.finditer(r'"', text))) % 2 ==0:
+        print_matches_for_debug(filename)
+    else:
+        print("yay")
+
+
+def print_matches_for_debug(filename):
+    """Takes a file, finds its matches and prints them out to a new file 'debug.txt' for debugging."""
+    text = clean_and_read_text(filename)
+    quotes = find_quoted_quotes(text)
+    debug = open('debug.txt', 'w')
+    counter = 0
+    for match in quotes:
+        debug.write("Match %(counter)i: " % locals() + match.group(0) + "\n")
+        counter+=1
+    debug.close
+
 def find_quoted_quotes(input_text):
     """This returns the regex matches from finding the quoted quotes."""
     return list(re.finditer(r'"[^"]+"', input_text))
-
 
 def create_location_histogram(file, bin_count=500):
     """\
@@ -273,9 +283,9 @@ def main():
     #         print_for_debug(find_quoted_quotes(text))
     #         pause()
     # print('\n')
-    text = clean_and_read_text("corpus/voyage.txt")
-    print_matches_for_debug(find_quoted_quotes(text))
-
+    # text = clean_and_read_text("corpus/voyage.txt")
+    # print_matches_for_debug(find_quoted_quotes(text))
+    quotations_check("corpus/night_and_day.txt")
 if __name__ == '__main__':
     main()
 
