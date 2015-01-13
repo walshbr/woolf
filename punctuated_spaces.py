@@ -30,10 +30,8 @@ def clean_text(input_text):
     """Clean the text by lowercasing and removing newlines."""
     return input_text.replace('\n', ' ').lower()
 
-
 def clean_and_read_text(input_text):
     return clean_text(read_text(input_text))
-
 
 def find_quoted_quotes(input_text):
     """This returns the regex matches from finding the quoted quotes."""
@@ -70,6 +68,16 @@ def create_location_histogram(file, bin_count=500):
     ax.set_ylim(bottom.min(), top.max())
 
     plt.show()
+
+
+def take_while(pred, input_str):
+    """This returns the prefix of a string that matches pred,
+    and the suffix where the match stops."""
+    for (i, c) in enumerate(input_str):
+        if not pred(c):
+            return (input_str[:i], input_str[i:])
+    else:
+        return (input_str, "")
 
 
 def is_punct(c):
@@ -109,6 +117,75 @@ def tokenize(input_str, token_re=make_token_re()):
         )
 
 
+class VectorSpace(object):
+    """\
+    This manages creating a vector space model of a corpus of documents. It
+    makes sure that the indexes are consistent.
+
+    Vectors of numpy arrays.
+    """
+
+    def __init__(self):
+        self.by_index = {}
+        self.by_token = {}
+
+    def __len__(self):
+        return len(self.by_index)
+
+    def get_index(self, token):
+        """If it doesn't have an index for the token, create one."""
+        try:
+            i = self.by_token[token]
+        except KeyError:
+            i = len(self.by_token)
+            self.by_token[token] = i
+            self.by_index[i] = token
+        return i
+
+    def lookup_token(self, i):
+        """Returns None if there is no token at that position."""
+        return self.by_index.get(i)
+
+    def lookup_index(self, token):
+        """Returns None if there is no index for that token."""
+        return self.by_token.get(token)
+
+    def vectorize(self, token_seq):
+        """This turns a list of tokens into a numpy array."""
+        v = [0] * len(self.by_token)
+        for token in token_seq:
+            i = self.get_index(token)
+            if i < len(v):
+                v[i] += 1
+            elif i == len(v):
+                v.append(1)
+            else:
+                raise Exception(
+                    "Invalid index {} (len = {})".format(i, len(v)),
+                    )
+        return np.array(v)
+
+    def get(self, vector, key):
+        """This looks up the key in the vector given."""
+        return vector[self.lookup_index(key)]
+
+    def pad(self, array):
+        """\
+        This pads a numpy array to match the dimensions of this vector space.
+        """
+        padding = np.zeros(len(self) - len(array))
+        return np.concatenate((array, padding))
+
+    def vectorize_corpus(self, corpus):
+        """\
+        This converts a corpus (tokenized documents) into a collection of
+        vectors.
+        """
+        vectors = [self.vectorize(doc) for doc in corpus]
+        vectors = [self.pad(doc) for doc in vectors]
+        return vectors
+
+
 def frequencies(corpus):
     """This takes a list of tokens and returns a `Counter`."""
     return collections.Counter(
@@ -136,49 +213,41 @@ def tokenize_file(filename):
     text = clean_and_read_text(filename)
     return list(tokenize(text))
 
-
 def pause():
     """\
     Pauses between each text when processing groups of texts together
-    for debugging, mostly, but also to analyze the sometimes really long
-    output.
+    for debugging, mostly, but also to analyze the sometimes really long output.
     """
-    input("Paused. Type ENTER/RETURN to continue.")
-
+    input("Paused. Type any key to continue.")
 
 def calc_number_of_quotes(file):
-    # Working here next time. you need to figure out a way to convert the
-    # matches into a big string for processing.
+    # Working here next time. you need to figure out a way to convert the matches into a big string for processing.
     text = clean_and_read_text(file)
     matches = find_quoted_quotes(text)
-
-    count = 0
+    text_string = ""
     for match in matches:
-        count += len(match.group(0))
-
+        text_string = text_string + match.group(0)
+    count = len(text_string)
     return count
 
-
-def calc_number_of_non_quotes(file):
+def calc_number_of_characters(file):
     text = clean_and_read_text(file)
     text = text.replace('\\', '')
     count = len(text)
+    print(text)
     return count
 
-
-def list_number_of_quotes(file, count):
+def list_number_of_quotes(file, count):           
     print("Number of quoted sentences in {}: {}".format(file, count))
-
 
 def percent_quoted(file):
     number_of_quotes = calc_number_of_quotes(file)
-    number_of_non_quotes = calc_number_of_non_quotes(file)
-    percent = 100 * (number_of_quotes / number_of_non_quotes)
-    print("The percentage of {} that occurs in quoted text is {}"
-          .format(file, percent))
-
+    number_of_characters = calc_number_of_characters(file)
+    percent = 100 * (number_of_quotes / number_of_characters)
+    print("The percentage of {} that occurs in quoted text is {}".format(file, percent))
 
 def main():
+    counter = 0
     for (root, _, files) in os.walk(CORPUS):
         for fn in files:
             # print('{}\n{}\n\n'.format(fn, '=' * len(fn)))
@@ -190,7 +259,7 @@ def main():
             #     print('{},{}: {}'.format(start, end, quote))
             # count = calc_number_of_quotes(os.path.join(root, fn))
             # percent_quoted(os.path.join(root, fn))
-            percent_quoted(os.path.join(root, fn))
+            percent_quoted(os.path.join(root, "night_and_day.txt"))
             pause()
     print('\n')
 
@@ -199,18 +268,16 @@ if __name__ == '__main__':
     main()
 
 # To do:
-# percent_quoted seems to be working now, though 69% quoted for Night and Day
-# seems crazy high.
+# percent_quoted seems to be working now, though 69% quoted for Night and Day seems crazy high.
 
 # You'll eventually want to calculate non-speech vs speech
 # percentages as well.
 
-# also note that you get one funky match at the end - match='"i shall go and
-# talk to him.  i shall say goodnig>, and you're losing the next quote.
+# also note that you get one funky match at the end - match='"i shall go and talk to him.  i shall say goodnig>, and you're losing the next quote.
 
 # Refactoring ideas: make it so that the os.path, etc. thing is simplified.
 # Also make sure, once all the functions are written, that you don't have
 # redundant cleaning of texts and looping through the corpus.
+# It's currently preserving \s for every quote. Do we want to keep that? Presumably? It's going to throw off
+# The percentages though.
 
-# It's currently preserving \s for every quote. Do we want to keep that?
-# Presumably? It's going to throw off The percentages though.
