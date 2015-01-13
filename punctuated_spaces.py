@@ -25,6 +25,14 @@ def read_text(filename):
     with codecs.open(filename, 'r', 'utf8') as f:
         return f.read()
 
+def print_matches_for_debug(input_text):
+    """Takes a list of matches and prints them out to a new file 'debug.txt' for debugging."""
+    text = open('debug.txt', 'w')
+    counter = 0
+    for match in input_text:
+        text.write("Match %(counter)i: " % locals() + match.group(0) + "\n")
+        counter+=1
+    text.close
 
 def clean_text(input_text):
     """Clean the text by lowercasing and removing newlines."""
@@ -247,22 +255,26 @@ def percent_quoted(file):
     print("The percentage of {} that occurs in quoted text is {}".format(file, percent))
 
 def main():
-    counter = 0
-    for (root, _, files) in os.walk(CORPUS):
-        for fn in files:
-            # print('{}\n{}\n\n'.format(fn, '=' * len(fn)))
-            # create_location_histogram(os.path.join(root, fn))
+    # counter = 0
+    # for (root, _, files) in os.walk(CORPUS):
+    #     for fn in files:
+    #         # print('{}\n{}\n\n'.format(fn, '=' * len(fn)))
+    #         # create_location_histogram(os.path.join(root, fn))
 
-            # tokens = tokenize_file(os.path.join(root, fn))
-            # for (start, end) in find_quotes(tokens, '"', '"'):
-            #     quote = ' '.join(tokens[start:end])
-            #     print('{},{}: {}'.format(start, end, quote))
-            # count = calc_number_of_quotes(os.path.join(root, fn))
-            # percent_quoted(os.path.join(root, fn))
-            percent_quoted(os.path.join(root, "night_and_day.txt"))
-            pause()
-    print('\n')
-
+    #         # tokens = tokenize_file(os.path.join(root, fn))
+    #         # for (start, end) in find_quotes(tokens, '"', '"'):
+    #         #     quote = ' '.join(tokens[start:end])
+    #         #     print('{},{}: {}'.format(start, end, quote))
+    #         # count = calc_number_of_quotes(os.path.join(root, fn))
+    #         # percent_quoted(os.path.join(root, fn))
+    #         # percent_quoted(os.path.join(root, "night_and_day.txt"))
+    #         text = clean_and_read_text(os.path.join(root, "night_and_day.txt"))
+    #         pause()
+    #         print_for_debug(find_quoted_quotes(text))
+    #         pause()
+    # print('\n')
+    text = clean_and_read_text("corpus/night_and_day.txt")
+    print_matches_for_debug(find_quoted_quotes(text))
 
 if __name__ == '__main__':
     main()
