@@ -33,12 +33,16 @@ def clean_and_read_text(input_text):
     return clean_text(read_text(input_text))
 
 def quotations_check(filename):
-    """Checks if a file has an even number of quotes."""
     text = clean_and_read_text(filename)
-    if len(list(re.finditer(r'"', text))) % 2 ==0:
-        print_matches_for_debug(filename)
+    """Checks if a file has an even number of quotes."""
+    if len(list(re.finditer(r'"', text))) % 2 !=0:
+        print("%(filename)s has an odd number of quotation marks." % locals())
+        pause()
+    elif percent_quoted(filename) > 30:
+        print("%(filename)s has a high percentage of quoted text." % locals())
+        pause()
     else:
-        print("yay")
+        return
 
 
 def print_matches_for_debug(filename):
@@ -252,7 +256,6 @@ def calc_number_of_characters(file):
     text = clean_and_read_text(file)
     text = text.replace('\\', '')
     count = len(text)
-    print(text)
     return count
 
 def list_number_of_quotes(file, count):           
@@ -262,12 +265,16 @@ def percent_quoted(file):
     number_of_quotes = calc_number_of_quotes(file)
     number_of_characters = calc_number_of_characters(file)
     percent = 100 * (number_of_quotes / number_of_characters)
+    return percent
+
+def list_percentage(file):
+    percent = percent_quoted(file)    
     print("The percentage of {} that occurs in quoted text is {}".format(file, percent))
 
 def main():
     # counter = 0
-    # for (root, _, files) in os.walk(CORPUS):
-    #     for fn in files:
+    for (root, _, files) in os.walk(CORPUS):
+        for fn in files:
     #         # print('{}\n{}\n\n'.format(fn, '=' * len(fn)))
     #         # create_location_histogram(os.path.join(root, fn))
 
@@ -276,16 +283,15 @@ def main():
     #         #     quote = ' '.join(tokens[start:end])
     #         #     print('{},{}: {}'.format(start, end, quote))
     #         # count = calc_number_of_quotes(os.path.join(root, fn))
-    #         # percent_quoted(os.path.join(root, fn))
+            quotations_check(os.path.join(root, fn))
     #         # percent_quoted(os.path.join(root, "night_and_day.txt"))
     #         text = clean_and_read_text(os.path.join(root, "night_and_day.txt"))
     #         pause()
     #         print_for_debug(find_quoted_quotes(text))
-    #         pause()
-    # print('\n')
+    print('\n')
     # text = clean_and_read_text("corpus/voyage.txt")
     # print_matches_for_debug(find_quoted_quotes(text))
-    quotations_check("corpus/night_and_day.txt")
+    # quotations_check("corpus/night_and_day.txt")
 if __name__ == '__main__':
     main()
 
