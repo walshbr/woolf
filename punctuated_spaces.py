@@ -258,18 +258,19 @@ def vectorizer_report(title, klass, filenames, **kwargs):
     for (fn, top) in zip(titles, top_items(v, a)):
         print('## {}\n'.format(fn))
         for (i, row) in enumerate(top):
-            print('{0:>3}. {1[0]:>6}. {1[1]:<12}\t{1[2]:>5}'.format(i, row))
+            print(
+                '{0:>3}. {1[0]:>6}. {1[1]:<12}\t{1[2]:>5}'.format(i + 1, row)
+                )
         print()
+
 
 def concatenate_quotes(filename):
     text = clean_and_read_text(filename)
     quotes = find_quoted_quotes(text)
-    counter = 0
-    concatenated_quotes = ""
+    concatenated_quotes = []
     for match in quotes:
-        concatenated_quotes += quotes[counter].group(0)
-        counter += 1
-    return concatenated_quotes
+        concatenated_quotes.append(match.group(0))
+    return "\n".join(concatenated_quotes)
 
 
 def get_corpus_quotes(filenames):
@@ -285,10 +286,15 @@ def get_corpus_quotes(filenames):
     return all_quotes
 
 
+def remove_short(text):
+    def not_short(x):
+        return len(x) > 1
+    return filter(not_short, tokenize(text))
+
+
 def main():
     files = list(all_files(CORPUS))
-    quoted = get_corpus_quotes(files)
-    remove_short = lambda s: filter(lambda x: len(x) > 1, tokenize(s))
+    quoted = [concatenate_quotes(fn) for fn in files]
 
     vectorizer_report(
         'Raw Frequencies', CountVectorizer, quoted, tokenizer=remove_short,
