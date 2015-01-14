@@ -239,6 +239,11 @@ def top_items(vectorizer, array, n=10):
 
 
 def vectorizer_report(title, klass, filenames, **kwargs):
+    if 'titles' in kwargs:
+        titles = kwargs.pop('titles')
+    else:
+        titles = filenames
+
     params = {
         'input': 'filename',
         'tokenizer': tokenize,
@@ -250,20 +255,37 @@ def vectorizer_report(title, klass, filenames, **kwargs):
     a = corpus.toarray()
 
     print('# {}\n'.format(title))
-    for (fn, top) in zip(filenames, top_items(v, a)):
+    for (fn, top) in zip(titles, top_items(v, a)):
         print('## {}\n'.format(fn))
-        for row in top:
-            print('{0[0]:>6}. {0[1]:<12}\t{0[2]:>5}'.format(row))
+        for (i, row) in enumerate(top):
+            print('{0:>3}. {1[0]:>6}. {1[1]:<12}\t{1[2]:>5}'.format(i, row))
         print()
+
+
+def get_corpus_quotes(filenames):
+    all_quotes = []
+
+    for filename in filenames:
+        with open(filename) as f:
+            quotes = '\n'.join(
+                m.group() for m in find_quoted_quotes(f.read())
+                )
+            all_quotes.append(quotes)
+
+    return all_quotes
 
 
 def main():
     files = list(all_files(CORPUS))
-    # remove_short = lambda s: filter(lambda x: len(x) > 1, tokenize(s))
+    quoted = get_corpus_quotes(files)
+    remove_short = lambda s: filter(lambda x: len(x) > 1, tokenize(s))
+
     vectorizer_report(
-        'Raw Frequencies', CountVectorizer, files, tokenizer=tokenize,
+        'Raw Frequencies', CountVectorizer, quoted, tokenizer=remove_short,
+        input='content', titles=files,
         )
-    vectorizer_report('Tf-Idf', TfidfVectorizer, files, tokenizer=tokenize)
+    vectorizer_report('Tf-Idf', TfidfVectorizer, quoted,
+                      tokenizer=remove_short, input='content', titles=files)
 
 
 if __name__ == '__main__':
