@@ -325,6 +325,16 @@ def vectorizer_report(title, klass, filenames, **kwargs):
             print('{0[0]:>6}. {0[1]:<12}\t{0[2]:>5}'.format(row))
         print()
 
+def concatenate_quotes(filename):
+    text = clean_and_read_text(filename)
+    quotes = find_quoted_quotes(text)
+    counter = 0
+    concatenated_quotes = ""
+    for match in quotes:
+        concatenated_quotes += quotes[counter].group(0)
+        counter += 1
+    return concatenated_quotes
+
 
 def main():
     files = list(all_files(CORPUS))
