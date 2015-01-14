@@ -6,6 +6,9 @@ pyvenv.cfg
 share/
 histograms/
 
+# debug files
+debug.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
