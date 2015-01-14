@@ -38,6 +38,32 @@ def clean_and_read_text(input_text):
     return clean_text(read_text(input_text))
 
 
+def quotations_check(filename):
+    text = clean_and_read_text(filename)
+    """Checks if a file has an even number of quotes."""
+    if len(list(re.finditer(r'"', text))) % 2 != 0:
+        print("%(filename)s has an odd number of quotation marks." % locals())
+        pause()
+    elif percent_quoted(filename) > 30:
+        print("%(filename)s has a high percentage of quoted text." % locals())
+        pause()
+    else:
+        return
+
+
+def print_matches_for_debug(filename):
+    """Takes a file, finds its matches and prints them out to a new file
+    'debug.txt' for debugging."""
+    text = clean_and_read_text(filename)
+    quotes = find_quoted_quotes(text)
+    debug = open('debug.txt', 'w')
+    counter = 0
+    for match in quotes:
+        debug.write("Match %(counter)i: " % locals() + match.group(0) + "\n")
+        counter += 1
+    debug.close
+
+
 def find_quoted_quotes(input_text):
     """This returns the regex matches from finding the quoted quotes."""
     return list(re.finditer(r'"[^"]+"', input_text))
@@ -73,6 +99,16 @@ def create_location_histogram(file, bin_count=500):
     ax.set_ylim(bottom.min(), top.max())
 
     plt.show()
+
+
+def take_while(pred, input_str):
+    """This returns the prefix of a string that matches pred,
+    and the suffix where the match stops."""
+    for (i, c) in enumerate(input_str):
+        if not pred(c):
+            return (input_str[:i], input_str[i:])
+    else:
+        return (input_str, "")
 
 
 def is_punct(c):
@@ -112,6 +148,75 @@ def tokenize(input_str, token_re=make_token_re()):
         )
 
 
+class VectorSpace(object):
+    """\
+    This manages creating a vector space model of a corpus of documents. It
+    makes sure that the indexes are consistent.
+
+    Vectors of numpy arrays.
+    """
+
+    def __init__(self):
+        self.by_index = {}
+        self.by_token = {}
+
+    def __len__(self):
+        return len(self.by_index)
+
+    def get_index(self, token):
+        """If it doesn't have an index for the token, create one."""
+        try:
+            i = self.by_token[token]
+        except KeyError:
+            i = len(self.by_token)
+            self.by_token[token] = i
+            self.by_index[i] = token
+        return i
+
+    def lookup_token(self, i):
+        """Returns None if there is no token at that position."""
+        return self.by_index.get(i)
+
+    def lookup_index(self, token):
+        """Returns None if there is no index for that token."""
+        return self.by_token.get(token)
+
+    def vectorize(self, token_seq):
+        """This turns a list of tokens into a numpy array."""
+        v = [0] * len(self.by_token)
+        for token in token_seq:
+            i = self.get_index(token)
+            if i < len(v):
+                v[i] += 1
+            elif i == len(v):
+                v.append(1)
+            else:
+                raise Exception(
+                    "Invalid index {} (len = {})".format(i, len(v)),
+                    )
+        return np.array(v)
+
+    def get(self, vector, key):
+        """This looks up the key in the vector given."""
+        return vector[self.lookup_index(key)]
+
+    def pad(self, array):
+        """\
+        This pads a numpy array to match the dimensions of this vector space.
+        """
+        padding = np.zeros(len(self) - len(array))
+        return np.concatenate((array, padding))
+
+    def vectorize_corpus(self, corpus):
+        """\
+        This converts a corpus (tokenized documents) into a collection of
+        vectors.
+        """
+        vectors = [self.vectorize(doc) for doc in corpus]
+        vectors = [self.pad(doc) for doc in vectors]
+        return vectors
+
+
 def frequencies(corpus):
     """This takes a list of tokens and returns a `Counter`."""
     return collections.Counter(
@@ -142,11 +247,10 @@ def tokenize_file(filename):
 
 def pause():
     """\
-    Pauses between each text when processing groups of texts together
-    for debugging, mostly, but also to analyze the sometimes really long
-    output.
+    Pauses between each text when processing groups of texts together for
+    debugging, mostly, but also to analyze the sometimes really long output.
     """
-    input("Paused. Type ENTER/RETURN to continue.")
+    input("Paused. Type any key to continue.")
 
 
 def calc_number_of_quotes(file):
@@ -154,15 +258,14 @@ def calc_number_of_quotes(file):
     # matches into a big string for processing.
     text = clean_and_read_text(file)
     matches = find_quoted_quotes(text)
-
-    count = 0
+    text_string = ""
     for match in matches:
-        count += len(match.group(0))
-
+        text_string = text_string + match.group(0)
+    count = len(text_string)
     return count
 
 
-def calc_total_chars(file):
+def calc_number_of_characters(file):
     text = clean_and_read_text(file)
     text = text.replace('\\', '')
     count = len(text)
@@ -175,10 +278,18 @@ def list_number_of_quotes(file, count):
 
 def percent_quoted(file):
     number_of_quotes = calc_number_of_quotes(file)
-    number_of_chars = calc_total_chars(file)
+    number_of_chars = calc_number_of_characters(file)
     percent = 100 * (number_of_quotes / number_of_chars)
+    number_of_characters = calc_number_of_characters(file)
+    percent = 100 * (number_of_quotes / number_of_characters)
     print("The percentage of {} that occurs in quoted text is {}"
           .format(file, percent))
+
+
+def list_percentage(file):
+    percent = percent_quoted(file)
+    print("The percentage of {} that occurs in quoted text is {}".format(
+        file, percent))
 
 
 def all_files(dirname):
@@ -242,4 +353,4 @@ if __name__ == '__main__':
 # redundant cleaning of texts and looping through the corpus.
 
 # It's currently preserving \s for every quote. Do we want to keep that?
-# Presumably? It's going to throw off The percentages though.
+# Presumably? It's going to throw off the percentages though.
