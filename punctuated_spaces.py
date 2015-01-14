@@ -148,75 +148,6 @@ def tokenize(input_str, token_re=make_token_re()):
         )
 
 
-class VectorSpace(object):
-    """\
-    This manages creating a vector space model of a corpus of documents. It
-    makes sure that the indexes are consistent.
-
-    Vectors of numpy arrays.
-    """
-
-    def __init__(self):
-        self.by_index = {}
-        self.by_token = {}
-
-    def __len__(self):
-        return len(self.by_index)
-
-    def get_index(self, token):
-        """If it doesn't have an index for the token, create one."""
-        try:
-            i = self.by_token[token]
-        except KeyError:
-            i = len(self.by_token)
-            self.by_token[token] = i
-            self.by_index[i] = token
-        return i
-
-    def lookup_token(self, i):
-        """Returns None if there is no token at that position."""
-        return self.by_index.get(i)
-
-    def lookup_index(self, token):
-        """Returns None if there is no index for that token."""
-        return self.by_token.get(token)
-
-    def vectorize(self, token_seq):
-        """This turns a list of tokens into a numpy array."""
-        v = [0] * len(self.by_token)
-        for token in token_seq:
-            i = self.get_index(token)
-            if i < len(v):
-                v[i] += 1
-            elif i == len(v):
-                v.append(1)
-            else:
-                raise Exception(
-                    "Invalid index {} (len = {})".format(i, len(v)),
-                    )
-        return np.array(v)
-
-    def get(self, vector, key):
-        """This looks up the key in the vector given."""
-        return vector[self.lookup_index(key)]
-
-    def pad(self, array):
-        """\
-        This pads a numpy array to match the dimensions of this vector space.
-        """
-        padding = np.zeros(len(self) - len(array))
-        return np.concatenate((array, padding))
-
-    def vectorize_corpus(self, corpus):
-        """\
-        This converts a corpus (tokenized documents) into a collection of
-        vectors.
-        """
-        vectors = [self.vectorize(doc) for doc in corpus]
-        vectors = [self.pad(doc) for doc in vectors]
-        return vectors
-
-
 def frequencies(corpus):
     """This takes a list of tokens and returns a `Counter`."""
     return collections.Counter(
@@ -328,11 +259,11 @@ def vectorizer_report(title, klass, filenames, **kwargs):
 
 def main():
     files = list(all_files(CORPUS))
-    remove_short = lambda s: filter(lambda x: len(x) > 1, tokenize(s))
+    # remove_short = lambda s: filter(lambda x: len(x) > 1, tokenize(s))
     vectorizer_report(
-        'Raw Frequencies', CountVectorizer, files, tokenizer=remove_short,
+        'Raw Frequencies', CountVectorizer, files, tokenizer=tokenize,
         )
-    vectorizer_report('Tf-Idf', TfidfVectorizer, files, tokenizer=remove_short)
+    vectorizer_report('Tf-Idf', TfidfVectorizer, files, tokenizer=tokenize)
 
 
 if __name__ == '__main__':
