@@ -51,6 +51,19 @@ def quotations_check(filename):
         return
 
 
+def check_quote_length(filename):
+    """Iterates over the matches and returns the first one that is greater than 100 characters.
+    Not exact, but it will give a sense of when a quotation mark is missing and
+    it starts flagging everything as quoted."""
+    text = clean_and_read_text(filename)
+    quotes = find_quoted_quotes(text)
+    for match in quotes:
+        if len(match.group(0)) > 250:
+            print(match)
+            break
+
+
+
 def print_matches_for_debug(filename):
     """Takes a file, finds its matches and prints them out to a new file
     'debug.txt' for debugging."""
@@ -61,7 +74,7 @@ def print_matches_for_debug(filename):
     for match in quotes:
         debug.write("Match %(counter)i: " % locals() + match.group(0) + "\n")
         counter += 1
-    debug.close
+    debug.close()
 
 
 def find_quoted_quotes(input_text):
@@ -146,6 +159,75 @@ def tokenize(input_str, token_re=make_token_re()):
     return (
         m.group() for m in token_re.finditer(input_str) if not m.group('trash')
         )
+
+
+class VectorSpace(object):
+    """\
+    This manages creating a vector space model of a corpus of documents. It
+    makes sure that the indexes are consistent.
+
+    Vectors of numpy arrays.
+    """
+
+    def __init__(self):
+        self.by_index = {}
+        self.by_token = {}
+
+    def __len__(self):
+        return len(self.by_index)
+
+    def get_index(self, token):
+        """If it doesn't have an index for the token, create one."""
+        try:
+            i = self.by_token[token]
+        except KeyError:
+            i = len(self.by_token)
+            self.by_token[token] = i
+            self.by_index[i] = token
+        return i
+
+    def lookup_token(self, i):
+        """Returns None if there is no token at that position."""
+        return self.by_index.get(i)
+
+    def lookup_index(self, token):
+        """Returns None if there is no index for that token."""
+        return self.by_token.get(token)
+
+    def vectorize(self, token_seq):
+        """This turns a list of tokens into a numpy array."""
+        v = [0] * len(self.by_token)
+        for token in token_seq:
+            i = self.get_index(token)
+            if i < len(v):
+                v[i] += 1
+            elif i == len(v):
+                v.append(1)
+            else:
+                raise Exception(
+                    "Invalid index {} (len = {})".format(i, len(v)),
+                    )
+        return np.array(v)
+
+    def get(self, vector, key):
+        """This looks up the key in the vector given."""
+        return vector[self.lookup_index(key)]
+
+    def pad(self, array):
+        """\
+        This pads a numpy array to match the dimensions of this vector space.
+        """
+        padding = np.zeros(len(self) - len(array))
+        return np.concatenate((array, padding))
+
+    def vectorize_corpus(self, corpus):
+        """\
+        This converts a corpus (tokenized documents) into a collection of
+        vectors.
+        """
+        vectors = [self.vectorize(doc) for doc in corpus]
+        vectors = [self.pad(doc) for doc in vectors]
+        return vectors
 
 
 def frequencies(corpus):
@@ -239,11 +321,6 @@ def top_items(vectorizer, array, n=10):
 
 
 def vectorizer_report(title, klass, filenames, **kwargs):
-    if 'titles' in kwargs:
-        titles = kwargs.pop('titles')
-    else:
-        titles = filenames
-
     params = {
         'input': 'filename',
         'tokenizer': tokenize,
@@ -255,71 +332,46 @@ def vectorizer_report(title, klass, filenames, **kwargs):
     a = corpus.toarray()
 
     print('# {}\n'.format(title))
-    for (fn, top) in zip(titles, top_items(v, a)):
+    for (fn, top) in zip(filenames, top_items(v, a)):
         print('## {}\n'.format(fn))
-        for (i, row) in enumerate(top):
-            print(
-                '{0:>3}. {1[0]:>6}. {1[1]:<12}\t{1[2]:>5}'.format(i + 1, row)
-                )
+        for row in top:
+            print('{0[0]:>6}. {0[1]:<12}\t{0[2]:>5}'.format(row))
         print()
-
 
 def concatenate_quotes(filename):
     text = clean_and_read_text(filename)
     quotes = find_quoted_quotes(text)
-    concatenated_quotes = []
+    counter = 0
+    concatenated_quotes = ""
     for match in quotes:
-        concatenated_quotes.append(match.group(0))
-    return "\n".join(concatenated_quotes)
-
-
-def get_corpus_quotes(filenames):
-    all_quotes = []
-
-    for filename in filenames:
-        with open(filename) as f:
-            quotes = '\n'.join(
-                m.group() for m in find_quoted_quotes(f.read())
-                )
-            all_quotes.append(quotes)
-
-    return all_quotes
-
-
-def remove_short(text):
-    def not_short(x):
-        return len(x) > 1
-    return filter(not_short, tokenize(text))
+        concatenated_quotes += quotes[counter].group(0)
+        counter += 1
+    return concatenated_quotes
 
 
 def main():
-    files = list(all_files(CORPUS))
-    quoted = [concatenate_quotes(fn) for fn in files]
+    # files = list(all_files(CORPUS))
+    # remove_short = lambda s: filter(lambda x: len(x) > 1, tokenize(s))
+    # vectorizer_report(
+    #     'Raw Frequencies', CountVectorizer, files, tokenizer=remove_short,
+    #     )
+    # vectorizer_report('Tf-Idf', TfidfVectorizer, files, tokenizer=remove_short)
 
-    vectorizer_report(
-        'Raw Frequencies', CountVectorizer, quoted, tokenizer=remove_short,
-        input='content', titles=files,
-        )
-    vectorizer_report('Tf-Idf', TfidfVectorizer, quoted,
-                      tokenizer=remove_short, input='content', titles=files)
-
+    print_matches_for_debug("corpus/between_the_acts.txt")
+    check_quote_length("corpus/between_the_acts.txt")
 
 if __name__ == '__main__':
     main()
 
 # To do:
-# percent_quoted seems to be working now, though 69% quoted for Night and Day
-# seems crazy high.
 
-# You'll eventually want to calculate non-speech vs speech
-# percentages as well.
-
-# also note that you get one funky match at the end - match='"i shall go and
-# talk to him.  i shall say goodnig>, and you're losing the next quote.
-
-# Refactoring ideas: make it so that the os.path, etc. thing is simplified.
 # Also make sure, once all the functions are written, that you don't have
 # redundant cleaning of texts and looping through the corpus.
 
 # It's currently preserving \s for every quote. Do we want to keep that?
 # Presumably? It's going to throw off the percentages though.
+
+# don situation
+
+# have it clean up a text file that it reads in.
+# automate it to run over the gutenberg corpus
