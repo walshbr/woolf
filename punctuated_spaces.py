@@ -39,17 +39,19 @@ def clean_and_read_text(input_text):
 
 
 def quotations_check(filename):
-    text = clean_and_read_text(filename)
     """Checks if a file has an even number of quotes."""
-    if len(list(re.finditer(r'"', text))) % 2 != 0:
+    if count_quotation_marks(filename) % 2 != 0:
         print("%(filename)s has an odd number of quotation marks." % locals())
         pause()
     elif percent_quoted(filename) > 30:
         print("%(filename)s has a high percentage of quoted text." % locals())
         pause()
     else:
-        return
+        print("%(filename)s checks out." % locals())
 
+def count_quotation_marks(filename):
+    text = clean_and_read_text(filename)
+    return len(list(re.finditer(r'"', text)))
 
 def check_quote_length(filename):
     """Iterates over the matches and returns the first one that is greater than 100 characters.
@@ -267,8 +269,6 @@ def pause():
 
 
 def calc_number_of_quotes(file):
-    # Working here next time. you need to figure out a way to convert the
-    # matches into a big string for processing.
     text = clean_and_read_text(file)
     matches = find_quoted_quotes(text)
     text_string = ""
@@ -291,12 +291,9 @@ def list_number_of_quotes(file, count):
 
 def percent_quoted(file):
     number_of_quotes = calc_number_of_quotes(file)
-    number_of_chars = calc_number_of_characters(file)
-    percent = 100 * (number_of_quotes / number_of_chars)
     number_of_characters = calc_number_of_characters(file)
     percent = 100 * (number_of_quotes / number_of_characters)
-    print("The percentage of {} that occurs in quoted text is {}"
-          .format(file, percent))
+    return percent
 
 
 def list_percentage(file):
