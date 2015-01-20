@@ -5,3 +5,6 @@ Night and Day
 line 2234 after "Katharine."
 line 3818 after "petticoat"
 line 3804 after "but-"
+
+Between the Acts
+line 1017 after preserve me!"

@@ -56,6 +56,7 @@ def count_quotation_marks(filename):
     text = clean_and_read_text(filename)
     return len(list(re.finditer(r'"', text)))
 
+
 def check_quote_length(filename):
     """Iterates over the matches and returns the first one that is greater than 100 characters.
     Not exact, but it will give a sense of when a quotation mark is missing and
@@ -83,6 +84,12 @@ def print_matches_for_debug(filename):
 def find_quoted_quotes(input_text):
     """This returns the regex matches from finding the quoted quotes."""
     return list(re.finditer(r'"[^"]+"', input_text))
+
+
+def find_quoted_single_quotes(input_text):
+    """Returns the regex matches from finding the quoted quotes where 
+    dialogue is signaled using single quotation marks."""
+    return list(re.finditer(r'\'[^\']+\'', input_text))
 
 
 def create_location_histogram(file, bin_count=500):
@@ -354,11 +361,8 @@ def main():
     #     'Raw Frequencies', CountVectorizer, files, tokenizer=remove_short,
     #     )
     # vectorizer_report('Tf-Idf', TfidfVectorizer, files, tokenizer=remove_short)
-    for (root, _, files) in os.walk(CORPUS):
-        for fn in files:
-    #         # create_location_histogram(os.path.join(root, fn))
-            quotations_check(os.path.join(root, fn))
-
+    text = clean_and_read_text("corpus/between_the_acts.txt")
+    find_quoted_single_quotes(text)
 if __name__ == '__main__':
     main()
 
