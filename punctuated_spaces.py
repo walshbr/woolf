@@ -43,6 +43,9 @@ def quotations_check(filename):
     if count_quotation_marks(filename) % 2 != 0:
         print("%(filename)s has an odd number of quotation marks." % locals())
         pause()
+    elif count_quotation_marks(filename) < 50:
+        print("%(filename)s has a very low number of quotation marks." % locals())
+        pause()
     elif percent_quoted(filename) > 30:
         print("%(filename)s has a high percentage of quoted text." % locals())
         pause()
