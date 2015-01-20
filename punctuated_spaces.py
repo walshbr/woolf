@@ -59,11 +59,9 @@ def check_quote_length(filename):
     it starts flagging everything as quoted."""
     text = clean_and_read_text(filename)
     quotes = find_quoted_quotes(text)
-    for match in quotes:
+    for idx, match in enumerate(quotes):
         if len(match.group(0)) > 250:
-            print(match)
-            break
-
+            print("Match %(idx)i:" % locals() + match.group(0))
 
 
 def print_matches_for_debug(filename):
@@ -353,9 +351,10 @@ def main():
     #     'Raw Frequencies', CountVectorizer, files, tokenizer=remove_short,
     #     )
     # vectorizer_report('Tf-Idf', TfidfVectorizer, files, tokenizer=remove_short)
-
-    print_matches_for_debug("corpus/between_the_acts.txt")
-    check_quote_length("corpus/between_the_acts.txt")
+    for (root, _, files) in os.walk(CORPUS):
+        for fn in files:
+    #         # create_location_histogram(os.path.join(root, fn))
+            quotations_check(os.path.join(root, fn))
 
 if __name__ == '__main__':
     main()
