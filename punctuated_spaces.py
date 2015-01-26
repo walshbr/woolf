@@ -24,7 +24,7 @@ CORPUS = 'corpus'
 
 
 def read_text(filename):
-    """Read in the text from the file."""
+    """Read in the text from the file; return a processed text."""
     with codecs.open(filename, 'r', 'utf8') as f:
         return f.read()
 
