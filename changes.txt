@@ -12,3 +12,6 @@ line 1017 after preserve me!"
 The Years
 Line 1463 single quote changed to double quote at beginning of line
 Line 5402 added double quote after morning--'Pah!'"
+
+Orlando
+line 6824 Ma'am changed to Maam
