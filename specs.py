@@ -17,21 +17,21 @@ class TestFindQuotedQuotes:
             m.group()
             for m in ps.find_quoted_quotes("She said, 'Howdy!'")
             ]
-        assert quotes == ["'Howdy!'"]
+        assert quotes == ["'Howdy!'"], repr(quotes)
 
     def test_it_should_find_quotes_with_preceding_contractions(self):
         quotes = [
             m.group()
             for m in ps.find_quoted_quotes("She didn't say, 'Good-bye.'")
             ]
-        assert quotes == ["'Good-bye.'"]
+        assert quotes == ["'Good-bye.'"], repr(quotes)
 
     def test_it_should_find_quotes_containing_contractions(self):
         quotes = [
             m.group()
             for m in ps.find_quoted_quotes("She said, 'Don't say that!'")
             ]
-        assert quotes == ["'Don't say that!'"]
+        assert quotes == ["'Don't say that!'"], repr(quotes)
 
     def test_it_should_find_quotes_with_contractions_following(self):
         quotes = [
@@ -40,7 +40,7 @@ class TestFindQuotedQuotes:
                 She said, 'Say that!' Or she didn't.
                 """)
             ]
-        assert quotes == ["'Say that!'"]
+        assert quotes == ["'Say that!'"], repr(quotes)
 
     def test_it_should_find_quotes_surrounded_by_contractions(self):
         quotes = [
@@ -49,4 +49,15 @@ class TestFindQuotedQuotes:
                 She didn't said, 'Don't say that!' Or she didn't.
                 """)
             ]
-        assert quotes == ["'Don't say that!'"]
+        assert quotes == ["'Don't say that!'"], repr(quotes)
+
+    def test_it_should_find_multiple_quotes_containing_contractions(self):
+        quotes = [
+            m.group()
+            for m in ps.find_quoted_quotes("""
+                She didn't say, 'Don't say that!' Or she didn't.
+                She didn't say, 'Don't say that!' Or she didn't.
+                """)
+            ]
+        assert quotes == ["'Don't say that!'", "'Don't say that!'"], \
+            repr(quotes)
