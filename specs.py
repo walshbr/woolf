@@ -54,10 +54,10 @@ class TestFindQuotedQuotes:
     def test_it_should_find_multiple_quotes_containing_contractions(self):
         quotes = [
             m.group()
-            for m in ps.find_quoted_quotes("""
-                She didn't say, 'Don't say that!' Or she didn't.
-                She didn't say, 'Don't say that!' Or she didn't.
-                """)
+            for m in ps.find_quoted_quotes(
+                "She didn't say, 'Don't say that!' "
+                "She didn't say, 'Don't say that!' Something else here."
+                )
             ]
         assert quotes == ["'Don't say that!'", "'Don't say that!'"], \
             repr(quotes)
