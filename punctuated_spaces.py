@@ -89,7 +89,8 @@ def find_quoted_quotes(text):
     quotation marks is less than fifty it assumes that single quotes are used to designate
     dialogue."""
     if count_quotation_marks(text) < 50:
-        return list(re.finditer(r'\'[^\']+\'', text))
+        # return list(re.finditer(r'\'[^\']+\'', text))
+        return list(re.finditer(r'\'[^\']+\'(?!\w)', text))
     else:
         return list(re.finditer(r'"[^"]+"', text))
 
@@ -362,7 +363,10 @@ if __name__ == '__main__':
 
 # To do:
 
-#get eric to show you how to convert the vectorizer report to work only on quoted text
+# probably a good time to use classes
+
+# get eric to show you how to convert the vectorizer report to work only on quoted text. 
+# you can set a processing and preprocessing step
 
 # Also make sure, once all the functions are written, that you don't have
 # redundant cleaning of texts and looping through the corpus.
