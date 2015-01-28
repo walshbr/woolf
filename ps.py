@@ -90,7 +90,7 @@ def find_quoted_quotes(text):
     dialogue."""
     if count_quotation_marks(text) < 50:
         # return list(re.finditer(r'\'[^\']+\'', text))
-        return list(re.finditer(r'\'[^\']+\'(?!\w)', text))
+        return list(re.finditer(r'(?<!\w)\'[^\']+\'(?!\w)', text))
     else:
         return list(re.finditer(r'"[^"]+"', text))
 
