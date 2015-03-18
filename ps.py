@@ -302,6 +302,14 @@ def list_percentage(text):
     percent = percent_quoted(text)
     print("The percentage of quoted text is {}".format(percent))
 
+def corpus_percentage_quotations():
+    for (root, _, files) in os.walk(CORPUS):
+        for fn in files:
+            text = clean_and_read_text(os.path.join(root, fn))
+            print("\n=============\n" + fn) 
+            list_percentage(text)
+            print("=============")
+
 def all_files(dirname):
     for (root, _, files) in os.walk(dirname):
         for fn in files:
@@ -348,16 +356,13 @@ def concatenate_quotes(text):
 def main():
     # NOTE: before any processing you have to clean the text using clean_and_read_text().
 
-    files = list(all_files(CORPUS))
-    remove_short = lambda s: filter(lambda x: len(x) > 1, tokenize(s))
-    vectorizer_report(
-        'Raw Frequencies', CountVectorizer, files, tokenizer=remove_short,
-        )
-    vectorizer_report('Tf-Idf', TfidfVectorizer, files, tokenizer=remove_short)
-    # for (root, _, files) in os.walk(CORPUS):
-    #     for fn in files:
-    #         text = clean_and_read_text(os.path.join(root, fn))
-    #         quotations_check(text, fn)
+    # files = list(all_files(CORPUS))
+    # remove_short = lambda s: filter(lambda x: len(x) > 1, tokenize(s))
+    # vectorizer_report(
+    #     'Raw Frequencies', CountVectorizer, files, tokenizer=remove_short,
+    #     )
+    # vectorizer_report('Tf-Idf', TfidfVectorizer, files, tokenizer=remove_short)
+    corpus_percentage_quotations()
 if __name__ == '__main__':
     main()
 
