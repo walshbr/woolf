@@ -312,6 +312,8 @@ def average_sentence_length(text):
 
 
 def corpus_list_average_sentence_lengths(corpus):
+    print("Average Sentence Lengths in the corpus.")
+    print("\n=============\n")
     for fn in corpus:
         text = clean_and_read_text(fn)
         average_length = average_sentence_length(text)
@@ -320,22 +322,33 @@ def corpus_list_average_sentence_lengths(corpus):
         print("=============")
 
 
-def corpus_list_number_of_quotes(corpus):
+def corpus_list_number_of_quoted_characters(corpus):
+    print("Number of quoted characters in the corpus.")
+    print("\n=============\n")
     for fn in corpus:
         text = clean_and_read_text(fn)
         number = calc_number_of_quotes(text)
         print("\n=============\n" + fn) 
-        print("The number of quoted sentences is {}".format(number))
+        print("The number of quoted characters is {}".format(number))
         print("=============")
 
 
 def corpus_list_percentage_quoted(corpus):
+    print("Percentage of each text that is quoted material in the corpus.")
+    print("\n=============\n")
     for fn in corpus:
         text = clean_and_read_text(fn)
         percent = percent_quoted(text)
         print("\n=============\n" + fn) 
         print("The percentage of quoted text is {}".format(percent))
         print("=============")
+
+
+def print_stats(corpus):
+    """prints stats to the terminal. when you implement the csv export this will likely be obsolete"""
+    corpus_list_percentage_quoted(corpus)
+    corpus_list_average_sentence_lengths(corpus)
+    corpus_list_number_of_quoted_characters(corpus)
 
 
 def all_files(dirname):
@@ -391,7 +404,7 @@ def main():
     #     'Raw Frequencies', CountVectorizer, files, tokenizer=remove_short,
     #     )
     # vectorizer_report('Tf-Idf', TfidfVectorizer, files, tokenizer=remove_short)
-    corpus_list_average_sentence_lengths(files)
+    print_stats(files)
 
 
 if __name__ == '__main__':
