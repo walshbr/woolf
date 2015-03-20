@@ -304,12 +304,12 @@ def average_sentence_length(text):
     matches = find_quoted_quotes(text)
     """Note: right those quotations that break in mid-sentence: "What is the point," she said, "since all of this happened." 
     are treated  as separate sentences.- but they're meant to be part of the same chunk. So the data needs massaging.
-    Need a regex to search for period and quotation mark pairings."""
+    Need a regex to search for period and quotation mark pairings. Also note that it's including the quotation marks in its character count."""
     number_of_matches = len(matches)
     number_of_quoted_characters = calc_number_of_quotes(text)
     average_quoted_sentence_length = number_of_quoted_characters / number_of_matches
     return average_quoted_sentence_length
-    
+
 
 def corpus_list_average_sentence_lengths(corpus):
     for fn in corpus:
