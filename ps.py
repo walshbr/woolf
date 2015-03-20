@@ -88,8 +88,7 @@ def find_quoted_quotes(text):
     """This returns the regex matches from finding the quoted quotes. Note: if the number of 
     quotation marks is less than fifty it assumes that single quotes are used to designate
     dialogue."""
-    if count_quotation_marks(text) < 50:
-        # return list(re.finditer(r'\'[^\']+\'', text))
+    if count_quotation_marks(text) < 500:
         return list(re.finditer(r'(?<!\w)\'.+?\'(?!\w)', text))
     else:
         return list(re.finditer(r'"[^"]+"', text))
@@ -278,6 +277,7 @@ def pause():
 
 
 def calc_number_of_quotes(text):
+    """returns the number of characters contained in quotation marks"""
     matches = find_quoted_quotes(text)
     text_string = ""
     for match in matches:
@@ -297,18 +297,21 @@ def percent_quoted(text):
     percent = 100 * (number_of_quotes / number_of_characters)
     return percent
 
+def corpus_list_number_of_quotes(corpus):
+    for fn in corpus:
+        text = clean_and_read_text(fn)
+        number = calc_number_of_quotes(text)
+        print("\n=============\n" + fn) 
+        print("The number of quoted sentences is {}".format(number))
+        print("=============")
 
-def list_percentage(text):
-    percent = percent_quoted(text)
-    print("The percentage of quoted text is {}".format(percent))
-
-def corpus_percentage_quotations():
-    for (root, _, files) in os.walk(CORPUS):
-        for fn in files:
-            text = clean_and_read_text(os.path.join(root, fn))
-            print("\n=============\n" + fn) 
-            list_percentage(text)
-            print("=============")
+def corpus_list_percentage_quoted(corpus):
+    for fn in corpus:
+        text = clean_and_read_text(fn)
+        percent = percent_quoted(text)
+        print("\n=============\n" + fn) 
+        print("The percentage of quoted text is {}".format(percent))
+        print("=============")
 
 def all_files(dirname):
     for (root, _, files) in os.walk(dirname):
@@ -356,13 +359,13 @@ def concatenate_quotes(text):
 def main():
     # NOTE: before any processing you have to clean the text using clean_and_read_text().
 
-    # files = list(all_files(CORPUS))
+    files = list(all_files(CORPUS))
     # remove_short = lambda s: filter(lambda x: len(x) > 1, tokenize(s))
     # vectorizer_report(
     #     'Raw Frequencies', CountVectorizer, files, tokenizer=remove_short,
     #     )
     # vectorizer_report('Tf-Idf', TfidfVectorizer, files, tokenizer=remove_short)
-    corpus_percentage_quotations()
+    corpus_list_number_of_quotes(files)
 if __name__ == '__main__':
     main()
 
