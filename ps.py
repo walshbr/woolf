@@ -55,8 +55,10 @@ def quotations_check(text, file_name):
         print("%(file_name)s checks out." % locals())
         pause()
 
+
 def count_quotation_marks(text):
     return len(list(re.finditer(r'"', text)))
+
 
 def count_single_quotation_marks(text):
     return len(list(re.finditer(r"'", text)))
