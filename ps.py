@@ -291,11 +291,34 @@ def calc_number_of_characters(text):
     count = len(text)
     return count
 
+
 def percent_quoted(text):
     number_of_quotes = calc_number_of_quotes(text)
     number_of_characters = calc_number_of_characters(text)
     percent = 100 * (number_of_quotes / number_of_characters)
     return percent
+
+
+def average_sentence_length(text):
+    """Meant to calculate the average length of a quoted sentence."""
+    matches = find_quoted_quotes(text)
+    """Note: right those quotations that break in mid-sentence: "What is the point," she said, "since all of this happened." 
+    are treated  as separate sentences.- but they're meant to be part of the same chunk. So the data needs massaging.
+    Need a regex to search for period and quotation mark pairings."""
+    number_of_matches = len(matches)
+    number_of_quoted_characters = calc_number_of_quotes(text)
+    average_quoted_sentence_length = number_of_quoted_characters / number_of_matches
+    return average_quoted_sentence_length
+
+
+def corpus_list_average_sentence_lengths(corpus):
+    for fn in corpus:
+        text = clean_and_read_text(fn)
+        average_length = average_sentence_length(text)
+        print("\n=============\n" + fn) 
+        print("The average sentence length is {}".format(average_length))
+        print("=============")
+
 
 def corpus_list_number_of_quotes(corpus):
     for fn in corpus:
@@ -305,6 +328,7 @@ def corpus_list_number_of_quotes(corpus):
         print("The number of quoted sentences is {}".format(number))
         print("=============")
 
+
 def corpus_list_percentage_quoted(corpus):
     for fn in corpus:
         text = clean_and_read_text(fn)
@@ -312,6 +336,7 @@ def corpus_list_percentage_quoted(corpus):
         print("\n=============\n" + fn) 
         print("The percentage of quoted text is {}".format(percent))
         print("=============")
+
 
 def all_files(dirname):
     for (root, _, files) in os.walk(dirname):
@@ -346,6 +371,7 @@ def vectorizer_report(title, klass, filenames, **kwargs):
             print('{0[0]:>6}. {0[1]:<12}\t{0[2]:>5}'.format(row))
         print()
 
+
 def concatenate_quotes(text):
     quotes = find_quoted_quotes(text)
     counter = 0
@@ -365,7 +391,9 @@ def main():
     #     'Raw Frequencies', CountVectorizer, files, tokenizer=remove_short,
     #     )
     # vectorizer_report('Tf-Idf', TfidfVectorizer, files, tokenizer=remove_short)
-    corpus_list_number_of_quotes(files)
+    corpus_list_average_sentence_lengths(files)
+
+
 if __name__ == '__main__':
     main()
 
