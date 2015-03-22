@@ -2,7 +2,6 @@
 
 import ps
 
-# current problem
 def assert_quote(input, expected):
     quotes = [m.group() for m in ps.find_quoted_quotes(input)]
     assert expected == quotes, repr(quotes)
