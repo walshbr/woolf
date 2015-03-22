@@ -17,6 +17,11 @@ class TestPercentQuoted:
             25,
             )
 
+class TestAverageSentenceLength:
+    def test_it_should_find_the_average_length_of_quoted_matches(self):
+        text = 'She said, "Howdy!"' * 100
+        assert 8 == ps.average_sentence_length(text)
+
 class TestCalcNumberOfCharacters:
 
     def test_it_should_count_the_number_of_characters(self):
