@@ -90,7 +90,7 @@ def find_quoted_quotes(text):
     """This returns the regex matches from finding the quoted quotes. Note: if the number of 
     quotation marks is less than fifty it assumes that single quotes are used to designate
     dialogue."""
-    if count_quotation_marks(text) < 500:
+    if count_quotation_marks(text) < count_single_quotation_marks(text):
         return list(re.finditer(r'(?<!\w)\'.+?\'(?!\w)', text))
     else:
         return list(re.finditer(r'"[^"]+"', text))

@@ -2,11 +2,33 @@
 
 import ps
 
-
+# current problem
 def assert_quote(input, expected):
     quotes = [m.group() for m in ps.find_quoted_quotes(input)]
     assert expected == quotes, repr(quotes)
 
+def assert_percent(input, expected):
+    assert expected == ps.percent_quoted(input)
+
+class TestPercentQuoted:
+    
+    def test_it_should_find_percentage_of_quoted_text(self):    
+        assert_percent(
+            'Hello. I said, "yes"',
+            25,
+            )
+
+class TestCalcNumberOfCharacters:
+
+    def test_it_should_count_the_number_of_characters(self):
+        text = 'Hello. I said, "yes"'
+        assert 20 == ps.calc_number_of_characters(text)
+
+class TestCalcNumberOfQuotes:
+
+    def test_it_should_count_the_number_of_quoted_characters(self):
+        text = 'Hello. I said, "yes"'
+        assert 5 == ps.calc_number_of_quotes(text)
 
 class TestFindQuotedQuotes:
 
