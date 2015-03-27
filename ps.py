@@ -96,35 +96,40 @@ def find_quoted_quotes(text):
         return list(re.finditer(r'"[^"]+"', text))
 
 
-def create_location_histogram(text, bin_count=500):
+def create_location_histogram(corpus, bin_count=500):
     """\
     This takes the regex matches and produces a histogram of where they
-    occurred in the document.
+    occurred in the document. Currently does this for all texts in the corpus
     """
-    matches = find_quoted_quotes(text)
-    locations = [m.start() for m in matches]
-    n, bins = np.histogram(locations, bin_count)
+    for fn in corpus:
+        text = clean_and_read_text(fn)
+        matches = find_quoted_quotes(text)
+        locations = [m.start() for m in matches]
+        n, bins = np.histogram(locations, bin_count)
 
-    fig, ax = plt.subplots()
+        fig, ax = plt.subplots()
+        fig.suptitle(fn, fontsize=14, fontweight='bold')
+        left = np.array(bins[:-1])
+        right = np.array(bins[1:])
+        bottom = np.zeros(len(left))
+        top = bottom + n
 
-    left = np.array(bins[:-1])
-    right = np.array(bins[1:])
-    bottom = np.zeros(len(left))
-    top = bottom + n
+        XY = np.array([[left, left, right, right], [bottom, top, top, bottom]]).T
 
-    XY = np.array([[left, left, right, right], [bottom, top, top, bottom]]).T
+        barpath = path.Path.make_compound_path_from_polys(XY)
 
-    barpath = path.Path.make_compound_path_from_polys(XY)
+        patch = patches.PathPatch(
+            barpath, facecolor='blue', edgecolor='gray', alpha=0.8,
+            )
+        ax.add_patch(patch)
 
-    patch = patches.PathPatch(
-        barpath, facecolor='blue', edgecolor='gray', alpha=0.8,
-        )
-    ax.add_patch(patch)
+        ax.set_xlim(left[0], right[-1])
+        ax.set_ylim(bottom.min(), top.max())
 
-    ax.set_xlim(left[0], right[-1])
-    ax.set_ylim(bottom.min(), top.max())
+        ax.set_xlabel('Position in Text, Measured by Character')
+        ax.set_ylabel('Number of Quotations')
 
-    plt.show()
+        plt.show()
 
 
 def take_while(pred, input_str):
@@ -401,13 +406,13 @@ def main():
     # NOTE: before any processing you have to clean the text using clean_and_read_text().
 
     files = list(all_files(CORPUS))
-    # remove_short = lambda s: filter(lambda x: len(x) > 1, tokenize(s))
-    # vectorizer_report(
-    #     'Raw Frequencies', CountVectorizer, files, tokenizer=remove_short,
-    #     )
-    # vectorizer_report('Tf-Idf', TfidfVectorizer, files, tokenizer=remove_short)
-    print_stats(files)
-
+    # # remove_short = lambda s: filter(lambda x: len(x) > 1, tokenize(s))
+    # # vectorizer_report(
+    # #     'Raw Frequencies', CountVectorizer, files, tokenizer=remove_short,
+    # #     )
+    # # vectorizer_report('Tf-Idf', TfidfVectorizer, files, tokenizer=remove_short)
+    # print_stats(files)
+    create_location_histogram(files)
 
 if __name__ == '__main__':
     main()
