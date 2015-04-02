@@ -9,6 +9,12 @@ histograms/
 # debug files
 debug.txt
 
+# notes
+notes/
+
+# results
+data_collections/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
