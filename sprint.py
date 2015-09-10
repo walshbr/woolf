@@ -4,6 +4,8 @@ from nltk import word_tokenize
 from nltk.corpus import wordnet as wn
 from nltk.corpus import names
 from nltk.corpus import brown
+from collections import deque
+from pprint import pprint
 
 f = open('corpus/1925_mrs.dalloway.txt')
 raw = f.read()
@@ -61,6 +63,55 @@ def find_contexts(tokens, context_marker, amount_of_context, tags=False):
     else:
         return contexts
 
+
+def is_verb(tagged_word, context):
+    """This returns True if the tagged word is any form of verb, but
+    it ignores the rest of the context."""
+    (_, tag) = tagged_word
+    return tag.startswith('VB')
+
+
+def windows(seq, window_size):
+    """This iterates over window_size chunks of seq."""
+    window = deque()
+    for item in seq:
+        window.append(item)
+        if len(window) > window_size:
+            window.popleft()
+        if len(window) == window_size:
+            yield list(window)
+
+
+def is_quote(tagged_token):
+    (word, _) = tagged_token
+    return word in {"''", "``", '"'}
+
+
+def train_quotes(tagged_tokens, is_target=is_verb, is_context=is_quote,
+                 amount_of_context=5):
+    """This returns a conditional frequency distribution for tagged
+    tokens for which is_target returns True, with the context being
+    determined by is_context and the amount_of_context."""
+
+    cfd = nltk.ConditionalFreqDist()
+
+    for chunk in windows(tagged_tokens, 2 * amount_of_context):
+        current = chunk[amount_of_context]
+        if is_target(current, chunk):
+            in_context = any(is_context(t) for t in chunk)
+            cfd[in_context][current[0]] += 1
+
+    return cfd
+
+
+def top_probs(fd, sample=None):
+    """This returns the top probabilities of the frequency
+    distribution. If given `sample` is the number of items to
+    return."""
+    N = float(fd.N())
+    return [(item, n/N) for (item, n) in fd.most_common(sample)]
+
+    
 def find_adjacent_verbs(tokens, context_marker="''", amount_of_context=5):
     """takes in tokens, the marker around which you're looking for context, and then the number of tokens you want to look in either direction. Returns a liist of nearby verbs. Currently, it's set up to look for verbs with a noun or pronoun on either side of them."""
     potential_verbs = []
@@ -117,9 +168,9 @@ def average_similarity(verb):
     #     final_similarity += average_similarity
     # return final_similarity / len(said_synsets)
 
-print(find_adjacent_verbs(tokens))
+# print(find_adjacent_verbs(tokens))
 
-print(len(find_adjacent_verbs(tokens)))
+# print(len(find_adjacent_verbs(tokens)))
 # print(results)
 
 # result_synonyms = [find_synonyms(result) for result in results]
@@ -141,3 +192,7 @@ print(len(find_adjacent_verbs(tokens)))
 # NOTE - got the name tagger working, but it's obviously not using every name in creation. and the fictional names woolf made up don't always get pulled. should i account for that in some way?
 
 # NOTE - the average similarity thing is a bit wonky at the moment. Before it was giving identical words a 0.2 similarity rating for each other. I think the problem is in how I'm averaging similarities together. But this seems like it could be a useful thing for culling out junk verbs that don't match our criteria. That was based on this overly complicated way of averaging the similarities between all synsets into a massive average similarity. Is just finding the similarity of the first sense enough? And what threshhold should I use for deciding when to throw words away? That's all to try and automate it. The easiest thing to do would be just to validate things. Having the threshold at 0.1 throws away 22 junk words. And we have 13 speech words.
+
+trained = train_quotes(tagged_tokens)
+pprint(top_probs(trained[True], 10))
+pprint(top_probs(trained[False], 10))
