@@ -1,0 +1,31 @@
+# NOTE - on synonyms - We would get a body of speech words, but does it matter that it's not necessarily pulling those from Woolf herself? Another approach that I start below is one that tries to go through and find such verbs specifically from Woolf. Should I do synonyms for those? Or just the body of verbs that she uses? Also, how to do with changes in speech?
+
+# NOTE - LOOK AT THE PROBLEMATIC EXAMPLE OF 'CALLED' - probs using the wrong speech tags here.
+
+# NOTE - synonyms seem too off the chain at present. perhaps it will work better if you can clean up the initial algorithm so it's only finding sound words - that would help a lot.
+
+# Note - the trigrams thing doesn't seem to help a lot. it gives you different parts of speech more than anything else.
+
+# NOTE - got the name tagger working, but it's obviously not using every name in creation. and the fictional names woolf made up don't always get pulled. should i account for that in some way?
+
+# NOTE - the average similarity thing is a bit wonky at the moment. Before it was giving identical words a 0.2 similarity rating for each other. I think the problem is in how I'm averaging similarities together. But this seems like it could be a useful thing for culling out junk verbs that don't match our criteria. That was based on this overly complicated way of averaging the similarities between all synsets into a massive average similarity. Is just finding the similarity of the first sense enough? And what threshhold should I use for deciding when to throw words away? That's all to try and automate it. The easiest thing to do would be just to validate things. Having the threshold at 0.1 throws away 22 junk words. And we have 13 speech words.
+
+# Eric's comments - frequency items. So then you can say we're not necessarily wanting a boolean. We want a probabiliity - if you can look at that set. You would want the frequencies in particular contexts. so that you can develop a probability.
+
+# for parts of speech - don't worry about collapsing them together. The genre of the novel is almost always in past tense anyway. and don't worry about the problems of using the brown tagset
+
+# types of verb tags
+
+# is_verb = lambda x: x.startswith('VB
+
+# and then it becomes
+
+# if is_verb(tag_one)
+
+# for the similarity you would want not an average but a minimum
+
+# eric would look at frequencies to determine probabilities. he would also look for some way to test it. different documents that you train it on. some that have one hundred of them that you have done by hand. But it would need to be a different document and sections of documents than you train it on. Use a different Woolf novel or novels - maybe pull out a section from each novel. it would allow you to say that you're getting the results you expect
+
+# the conditional frequency distribution would allow you to process the entire text.
+
+# using the Bayes thing Eric put together - stay focused on the writing. eric would start looking at chapter 6 scan through the stuff before and read through section 5. This is if you want to get working on it.
