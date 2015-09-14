@@ -17,6 +17,7 @@ TEST_SET_RATIO = 0.2
 def tokenize_corpus(filename):
     """Read the corpus into test and training sets."""
     with open(filename) as f:
+        # TODO: word_tokenize isn't breaking carots off from the words.
         return word_tokenize(f.read())
 
 
@@ -66,6 +67,7 @@ def quote_features(tagged_tokens, is_target=is_verb, is_context=is_quote,
     tokens for which is_target returns True, with the context being
     determined by is_context and the amount_of_context."""
 
+    # TODO: This chunk may be ignoring the outmost items.
     for chunk in windows(tagged_tokens, 2 * amount_of_context):
         current = chunk[amount_of_context]
         if is_target(current, chunk):
@@ -75,6 +77,7 @@ def quote_features(tagged_tokens, is_target=is_verb, is_context=is_quote,
                 history = chunk[amount_of_context - offset]
                 features['token{}'.format(offset)] = history[0]
                 features['tag{}'.format(offset)] = history[1]
+            print(in_context, features)
             yield (features, in_context)
 
 
@@ -91,6 +94,7 @@ def main():
         ))
 
     # Dividing features into test and training sets.
+    # TODO: Add random shuffle back in.
     # random.shuffle(training_features)
     test_size = int(TEST_SET_RATIO * len(training_features))
     test_set = training_features[:test_size]
@@ -99,6 +103,12 @@ def main():
     # stay classy
     classifier = nltk.NaiveBayesClassifier.train(training_set)
     print(nltk.classify.accuracy(classifier, test_set))
+
+    # TODO: We need a baseline of what the accuracy would be tagging nothing in
+    # context.
+
+    # TODO: cross-validate.
+    # TODO: MOAR TRAINING!
 
 
 if __name__ == '__main__':
