@@ -12,6 +12,7 @@ from nltk import wordpunct_tokenize
 from nltk.corpus import names
 from nltk.corpus import brown
 from collections import deque
+from math import floor
 # import random
 
 
@@ -74,31 +75,44 @@ def is_word(tagged_token, _):
     return tagged_token[0].isalnum()
 
 
-def quote_features(tagged_tokens, is_target=is_verb, is_context=is_quote,
-                   amount_of_context=5, feature_history=0):
-    """This returns a conditional frequency distribution for tagged
-    tokens for which is_target returns True, with the context being
-    determined by is_context and the amount_of_context."""
-
-    # TODO: Break feature creation into a new function so it can be called when
-    # we don't know the answers.
+def get_features(tagged_window, is_target=is_verb, feature_history=0):
+    """This returns the feature set for the data in the current window."""
 
     # TODO: Training on transition points that happen between words ignoring
     # punctuation.
 
-    for chunk in windows(tagged_tokens, 2 * amount_of_context):
-        if len(chunk) < 2 * amount_of_context:
+    featureset = None
+
+    index = floor(len(tagged_window) / 2)
+    current = tagged_window[index]
+    if is_target(current, tagged_window):
+        featureset = {}
+        for offset in range(feature_history+1):
+            (token, tag) = tagged_window[index - offset]
+            featureset['token{}'.format(offset)] = token
+            featureset['tag{}'.format(offset)] = tag
+
+    return featureset
+
+
+def get_tag(_, tagged_window, is_context=is_quote):
+    """This returns the tag for the feature set to train against. """
+    return any(is_context(t) for t in tagged_window)
+
+
+def get_training_features(tagged_tokens, is_target=is_verb,
+                          is_context=is_quote, amount_of_context=5,
+                          feature_history=0):
+    """This returns a sequence of feature sets and tags to train against for
+    the input tokens."""
+    window_size = 2 * amount_of_context
+    for window in windows(tagged_tokens, window_size):
+        if len(window) < window_size:
             continue
-        current = chunk[amount_of_context]
-        if is_target(current, chunk):
-            in_context = any(is_context(t) for t in chunk)
-            features = {}
-            for offset in range(feature_history+1):
-                history = chunk[amount_of_context - offset]
-                features['token{}'.format(offset)] = history[0]
-                features['tag{}'.format(offset)] = history[1]
-            print(in_context, features)
-            yield (features, in_context)
+        features = get_features(window, is_target, feature_history)
+        if features is not None:
+            tag = get_tag(features, window, is_context)
+            yield (features, tag)
 
 
 def main():
@@ -108,7 +122,7 @@ def main():
     tagged_tokens = tagger.tag(tokens)
 
     # Identifying the features.
-    training_features = list(quote_features(
+    training_features = list(get_training_features(
         tagged_tokens,
         is_target=is_word,
         feature_history=4,
