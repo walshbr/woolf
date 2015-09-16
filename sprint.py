@@ -125,7 +125,7 @@ def main():
     training_features = list(get_training_features(
         tagged_tokens,
         is_target=is_word,
-        feature_history=4,
+        feature_history=2,
         ))
 
     # Dividing features into test and training sets.
@@ -135,12 +135,20 @@ def main():
     test_set = training_features[:test_size]
     training_set = training_features[test_size:]
 
+    # get a baseline classifier
+    baseline_training = [(fs, False) for (fs, _) in training_set]
+    baseline = nltk.NaiveBayesClassifier.train(baseline_training)
+    print('Baseline = {}'.format(nltk.classify.accuracy(baseline, test_set)))
+
     # stay classy
     classifier = nltk.NaiveBayesClassifier.train(training_set)
-    print(nltk.classify.accuracy(classifier, test_set))
+    print('Accuracy = {}'.format(nltk.classify.accuracy(classifier, test_set)))
 
-    # TODO: We need a baseline of what the accuracy would be tagging nothing in
-    # context.
+    # TODO: output a confusion table
+    # links:
+    # - http://www.nltk.org/book/ch06.html#confusion-matrices
+    # - http://www.nltk.org/_modules/nltk/metrics/confusionmatrix.html
+    # - http://www.nltk.org/api/nltk.metrics.html#module-nltk.metrics.confusionmatrix
 
     # TODO: cross-validate.
     # TODO: MOAR TRAINING!
