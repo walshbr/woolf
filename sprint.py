@@ -8,7 +8,7 @@ out."""
 
 import nltk
 import nltk.corpus
-from nltk import word_tokenize
+from nltk import wordpunct_tokenize
 from nltk.corpus import names
 from nltk.corpus import brown
 from collections import deque
@@ -22,8 +22,12 @@ TEST_SET_RATIO = 0.2
 def tokenize_corpus(filename):
     """Read the corpus into test and training sets."""
     with open(filename) as fin:
-        # TODO: word_tokenize isn't breaking carots off from the words.
-        return word_tokenize(fin.read())
+        for token in wordpunct_tokenize(fin.read()):
+            if token.isalnum():
+                yield token
+            else:
+                for char in token:
+                    yield char
 
 
 def build_trainer(tagged_sents, default_tag='NN'):
@@ -74,6 +78,13 @@ def quote_features(tagged_tokens, is_target=is_verb, is_context=is_quote,
     determined by is_context and the amount_of_context."""
 
     # TODO: This chunk may be ignoring the outmost items.
+
+    # TODO: Break feature creation into a new function so it can be called when
+    # we don't know the answers.
+
+    # TODO: Training on transition points that happen between words ignoring
+    # punctuation.
+
     for chunk in windows(tagged_tokens, 2 * amount_of_context):
         current = chunk[amount_of_context]
         if is_target(current, chunk):
