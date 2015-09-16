@@ -87,7 +87,7 @@ def print_matches_for_debug(text):
 
 
 def find_quoted_quotes(text):
-    """This returns the regex matches from finding the quoted quotes. Note: if the number of 
+    """This returns the regex matches from finding the quoted quotes. Note: if the number of
     quotation marks is less than fifty it assumes that single quotes are used to designate
     dialogue."""
     if count_quotation_marks(text) < count_single_quotation_marks(text):
@@ -108,7 +108,7 @@ def create_location_histogram(corpus, bin_count=500):
         n, bins = np.histogram(locations, bin_count)
 
         fig, ax = plt.subplots()
-        fig.suptitle(fn, fontsize=14, fontweight='bold')
+        # fig.suptitle(fn, fontsize=14, fontweight='bold')
         left = np.array(bins[:-1])
         right = np.array(bins[1:])
         bottom = np.zeros(len(left))
@@ -125,10 +125,15 @@ def create_location_histogram(corpus, bin_count=500):
 
         ax.set_xlim(left[0], right[-1])
         ax.set_ylim(bottom.min(), top.max())
+        plt.axis('off')
 
-        ax.set_xlabel('Position in Text, Measured by Character')
-        ax.set_ylabel('Number of Quotations')
+        # ax.set_xlabel('Position in Text, Measured by Character')
+        # ax.set_ylabel('Number of Quotations')
 
+        (base, _) = os.path.splitext(os.path.basename(fn))
+        output = os.path.join('output', base + '.png')
+        print('writing to {}'.format(output))
+        plt.savefig(output)
         plt.show()
 
 
@@ -309,7 +314,7 @@ def percent_quoted(text):
 def average_sentence_length(text):
     """Meant to calculate the average length of a quoted sentence."""
     matches = find_quoted_quotes(text)
-    """Note: right those quotations that break in mid-sentence: "What is the point," she said, "since all of this happened." 
+    """Note: right those quotations that break in mid-sentence: "What is the point," she said, "since all of this happened."
     are treated  as separate sentences.- but they're meant to be part of the same chunk. So the data needs massaging.
     Need a regex to search for period and quotation mark pairings. Also note that it's including the quotation marks in its character count."""
     number_of_matches = len(matches)
@@ -324,7 +329,7 @@ def corpus_list_average_sentence_lengths(corpus):
     for fn in corpus:
         text = clean_and_read_text(fn)
         average_length = average_sentence_length(text)
-        print("\n=============\n" + fn) 
+        print("\n=============\n" + fn)
         print("The average sentence length is {}".format(average_length))
         print("=============")
 
@@ -335,7 +340,7 @@ def corpus_list_number_of_quoted_characters(corpus):
     for fn in corpus:
         text = clean_and_read_text(fn)
         number = calc_number_of_quotes(text)
-        print("\n=============\n" + fn) 
+        print("\n=============\n" + fn)
         print("The number of quoted characters is {}".format(number))
         print("=============")
 
@@ -346,7 +351,7 @@ def corpus_list_percentage_quoted(corpus):
     for fn in corpus:
         text = clean_and_read_text(fn)
         percent = percent_quoted(text)
-        print("\n=============\n" + fn) 
+        print("\n=============\n" + fn)
         print("The percentage of quoted text is {}".format(percent))
         print("=============")
 
@@ -421,7 +426,7 @@ if __name__ == '__main__':
 
 # probably a good time to use classes
 
-# get eric to show you how to convert the vectorizer report to work only on quoted text. 
+# get eric to show you how to convert the vectorizer report to work only on quoted text.
 # you can set a processing and preprocessing step
 
 # Also make sure, once all the functions are written, that you don't have
