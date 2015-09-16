@@ -87,6 +87,8 @@ def quote_features(tagged_tokens, is_target=is_verb, is_context=is_quote,
     # punctuation.
 
     for chunk in windows(tagged_tokens, 2 * amount_of_context):
+        if len(chunk) < 2 * amount_of_context:
+            continue
         current = chunk[amount_of_context]
         if is_target(current, chunk):
             in_context = any(is_context(t) for t in chunk)
@@ -101,7 +103,7 @@ def quote_features(tagged_tokens, is_target=is_verb, is_context=is_quote,
 
 def main():
     """The main function."""
-    tokens = tokenize_corpus(TAGGED)
+    tokens = list(tokenize_corpus(TAGGED))
     tagger = build_trainer(brown.tagged_sents(categories='news'))
     tagged_tokens = tagger.tag(tokens)
 
