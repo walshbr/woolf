@@ -56,7 +56,10 @@ def windows(seq, window_size):
         window.append(item)
         if len(window) > window_size:
             window.popleft()
-        if len(window) == window_size:
+        yield list(window)
+    while window:
+        window.popleft()
+        if window:
             yield list(window)
 
 
@@ -76,8 +79,6 @@ def quote_features(tagged_tokens, is_target=is_verb, is_context=is_quote,
     """This returns a conditional frequency distribution for tagged
     tokens for which is_target returns True, with the context being
     determined by is_context and the amount_of_context."""
-
-    # TODO: This chunk may be ignoring the outmost items.
 
     # TODO: Break feature creation into a new function so it can be called when
     # we don't know the answers.
