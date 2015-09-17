@@ -16,7 +16,7 @@ from math import floor
 # import random
 
 
-TAGGED = 'training_passages/tagged.txt'
+TAGGED = 'training_passages/tagged_text/mrs.dalloway.txt'
 TEST_SET_RATIO = 0.2
 
 
