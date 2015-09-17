@@ -101,40 +101,45 @@ def create_location_histogram(corpus, bin_count=500):
     This takes the regex matches and produces a histogram of where they
     occurred in the document. Currently does this for all texts in the corpus
     """
-    for fn in corpus:
+    fig, axes = plt.subplots(len(corpus), 1, squeeze=True)
+    fig.set_figheight(9.4)
+    for (fn, ax) in zip(corpus, axes):
         text = clean_and_read_text(fn)
         matches = find_quoted_quotes(text)
         locations = [m.start() for m in matches]
         n, bins = np.histogram(locations, bin_count)
 
-        fig, ax = plt.subplots()
         # fig.suptitle(fn, fontsize=14, fontweight='bold')
         left = np.array(bins[:-1])
         right = np.array(bins[1:])
         bottom = np.zeros(len(left))
         top = bottom + n
 
-        XY = np.array([[left, left, right, right], [bottom, top, top, bottom]]).T
+        XY = np.array(
+            [[left, left, right, right], [bottom, top, top, bottom]]
+        ).T
 
         barpath = path.Path.make_compound_path_from_polys(XY)
 
         patch = patches.PathPatch(
             barpath, facecolor='blue', edgecolor='gray', alpha=0.8,
             )
-        ax.add_patch(patch)
 
         ax.set_xlim(left[0], right[-1])
         ax.set_ylim(bottom.min(), top.max())
-        plt.axis('off')
+        ax.xaxis.set_visible(False)
+        ax.yaxis.set_visible(False)
+        # plt.axis('off')
+        ax.add_patch(patch)
 
         # ax.set_xlabel('Position in Text, Measured by Character')
         # ax.set_ylabel('Number of Quotations')
 
-        (base, _) = os.path.splitext(os.path.basename(fn))
-        output = os.path.join('output', base + '.png')
-        print('writing to {}'.format(output))
-        plt.savefig(output)
-        plt.show()
+    (base, _) = os.path.splitext(os.path.basename(fn))
+    output = os.path.join('output', base + '.png')
+    print('writing to {}'.format(output))
+    plt.savefig(output, transparent=True)
+    plt.show()
 
 
 def take_while(pred, input_str):
