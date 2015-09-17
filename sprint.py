@@ -16,7 +16,7 @@ from math import floor
 # import random
 
 
-TAGGED = 'training_passages/tagged.txt'
+TAGGED = 'training_passages/tagged_text/mrs.dalloway.txt'
 TEST_SET_RATIO = 0.2
 
 
@@ -115,12 +115,12 @@ def get_training_features(tagged_tokens, is_target=is_verb,
             yield (features, tag)
 
 
-def produce_confusion_matrix(training_features, tagged_tokens, classifier):
+def produce_confusion_matrix(training_features, tagged_tokens, classifier, test_size):
     """Produces a confusion matrix for the test classifier"""
 
     gold = [feature for (__, feature) in training_features]
     test = [classifier.classify(features) for (features, __) in get_training_features(tagged_tokens, is_target=is_word)]
-    cm = nltk.ConfusionMatrix(gold, test)
+    cm = nltk.ConfusionMatrix(gold[:test_size], test[:test_size])
     print(cm.pretty_format(sort_by_count=True, show_percents=True, truncate=9))
 
 
@@ -153,12 +153,7 @@ def main():
     classifier = nltk.NaiveBayesClassifier.train(training_set)
     print('Accuracy = {}'.format(nltk.classify.accuracy(classifier, test_set)))
 
-    produce_confusion_matrix(training_features, tagged_tokens, classifier)
-    # TODO: output a confusion table
-    # links:
-    # - http://www.nltk.org/book/ch06.html#confusion-matrices
-    # - http://www.nltk.org/_modules/nltk/metrics/confusionmatrix.html
-    # - http://www.nltk.org/api/nltk.metrics.html#module-nltk.metrics.confusionmatrix
+    produce_confusion_matrix(training_features, tagged_tokens, classifier, test_size)
 
     # TODO: cross-validate.
     # TODO: MOAR TRAINING!
