@@ -65,9 +65,10 @@ def count_single_quotation_marks(text):
 
 
 def print_long_quotes(text):
-    """Iterates over the matches and returns the first one that is greater than 100 characters.
-    Not exact, but it will give a sense of when a quotation mark is missing and
-    it starts flagging everything as quoted."""
+    """Iterates over the matches and returns the first one that is
+    greater than 100 characters.  Not exact, but it will give a sense
+    of when a quotation mark is missing and it starts flagging
+    everything as quoted."""
     quotes = find_quoted_quotes(text)
     for idx, match in enumerate(quotes):
         if len(match.group(0)) > 250:
@@ -87,9 +88,9 @@ def print_matches_for_debug(text):
 
 
 def find_quoted_quotes(text):
-    """This returns the regex matches from finding the quoted quotes. Note: if the number of
-    quotation marks is less than fifty it assumes that single quotes are used to designate
-    dialogue."""
+    """This returns the regex matches from finding the quoted
+    quotes. Note: if the number of quotation marks is less than fifty
+    it assumes that single quotes are used to designate dialogue."""
     if count_quotation_marks(text) < count_single_quotation_marks(text):
         return list(re.finditer(r'(?<!\w)\'.+?\'(?!\w)', text))
     else:
@@ -319,12 +320,16 @@ def percent_quoted(text):
 def average_sentence_length(text):
     """Meant to calculate the average length of a quoted sentence."""
     matches = find_quoted_quotes(text)
-    """Note: right those quotations that break in mid-sentence: "What is the point," she said, "since all of this happened."
-    are treated  as separate sentences.- but they're meant to be part of the same chunk. So the data needs massaging.
-    Need a regex to search for period and quotation mark pairings. Also note that it's including the quotation marks in its character count."""
+    """Note: right those quotations that break in mid-sentence: "What
+    is the point," she said, "since all of this happened."  are
+    treated as separate sentences.- but they're meant to be part of
+    the same chunk. So the data needs massaging.  Need a regex to
+    search for period and quotation mark pairings. Also note that it's
+    including the quotation marks in its character count."""
     number_of_matches = len(matches)
     number_of_quoted_characters = calc_number_of_quotes(text)
-    average_quoted_sentence_length = number_of_quoted_characters / number_of_matches
+    average_quoted_sentence_length = (number_of_quoted_characters
+                                      / number_of_matches)
     return average_quoted_sentence_length
 
 
@@ -362,7 +367,8 @@ def corpus_list_percentage_quoted(corpus):
 
 
 def print_stats(corpus):
-    """prints stats to the terminal. when you implement the csv export this will likely be obsolete"""
+    """prints stats to the terminal. when you implement the csv export
+    this will likely be obsolete"""
     corpus_list_percentage_quoted(corpus)
     corpus_list_average_sentence_lengths(corpus)
     corpus_list_number_of_quoted_characters(corpus)
@@ -413,14 +419,16 @@ def concatenate_quotes(text):
 
 
 def main():
-    # NOTE: before any processing you have to clean the text using clean_and_read_text().
+    # NOTE: before any processing you have to clean the text using
+    # clean_and_read_text().
 
     files = list(all_files(CORPUS))
     # # remove_short = lambda s: filter(lambda x: len(x) > 1, tokenize(s))
     # # vectorizer_report(
     # #     'Raw Frequencies', CountVectorizer, files, tokenizer=remove_short,
     # #     )
-    # # vectorizer_report('Tf-Idf', TfidfVectorizer, files, tokenizer=remove_short)
+    # # vectorizer_report('Tf-Idf', TfidfVectorizer, files,
+    # #                   tokenizer=remove_short)
     # print_stats(files)
     create_location_histogram(files)
 
@@ -431,8 +439,9 @@ if __name__ == '__main__':
 
 # probably a good time to use classes
 
-# get eric to show you how to convert the vectorizer report to work only on quoted text.
-# you can set a processing and preprocessing step
+# get eric to show you how to convert the vectorizer report to work
+# only on quoted text.  you can set a processing and preprocessing
+# step
 
 # Also make sure, once all the functions are written, that you don't have
 # redundant cleaning of texts and looping through the corpus.
