@@ -124,12 +124,12 @@ def produce_confusion_matrix(training_features, tagged_tokens, classifier, test_
     print(cm.pretty_format(sort_by_count=True, show_percents=True, truncate=9))
 
 def cross_validate(training_features, num_folds=10):
-    """Takes a training set and cross validates it"""
+    """Takes a set of training features, trains a classifier based on it, and cross validates it against a specified number of folds. Prints out the average accuracy for the classifier across num_folds."""
     accuracies = []
     subset_size = int(len(training_features)/num_folds)
     for i in range(num_folds):
-        accuracy = 0
         #this pulls out a chunk for testing and trains on the rest. And it cycles through. So it retrains on each section while testing it against stuff it hasn't seen.
+        accuracy = 0
         testing_this_round = training_features[i*subset_size:][:subset_size]
         training_this_round = training_features[:i*subset_size] + training_features[(i+1)*subset_size:]
         classifier = nltk.NaiveBayesClassifier.train(training_this_round)
@@ -139,6 +139,7 @@ def cross_validate(training_features, num_folds=10):
     average = sum(accuracies)/ num_folds
 
     print('Cross-validated accuracy = {}'.format(average))
+
 def main():
     """The main function."""
     tokens = list(tokenize_corpus(TAGGED))
@@ -155,9 +156,6 @@ def main():
     # Dividing features into test and training sets.
     # TODO: Add random shuffle back in.
     # random.shuffle(training_features)
-    test_size = int(TEST_SET_RATIO * len(training_features))
-    test_set = training_features[:test_size]
-    training_set = training_features[test_size:]
 
     # get a baseline classifier
     # baseline_training = [(fs, False) for (fs, _) in training_set]
@@ -170,8 +168,7 @@ def main():
 
     # produce_confusion_matrix(training_features, tagged_tokens, classifier, test_size)
 
-    # TODO: cross-validate.
-    cross_validate(training_features, 10)
+    cross_validate(training_features)
     # TODO: MOAR TRAINING!
 
 # question: the way I have things spaced with returns means that, sometimes when this is not the case in the text, two quotes will appear next to each other. If it blasts the line spaces out of existence, it would think that
