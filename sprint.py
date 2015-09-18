@@ -169,6 +169,7 @@ def main():
 
     # produce_confusion_matrix(training_features, tagged_tokens, classifier, test_size)
 
+    # note - the classifier is currently getting rebuilt and trained inside the function. so it's not really being passed something to cross-validate, is it?
     cross_validate(training_features)
     # TODO: MOAR TRAINING!
 
