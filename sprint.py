@@ -133,10 +133,11 @@ def cross_validate(training_features, num_folds=10):
         testing_this_round = training_features[i*subset_size:][:subset_size]
         training_this_round = training_features[:i*subset_size] + training_features[(i+1)*subset_size:]
         classifier = nltk.NaiveBayesClassifier.train(training_this_round)
-        average = nltk.classify.accuracy(classifier, testing_this_round)
-        accuracies.append(average)
+        accuracy = nltk.classify.accuracy(classifier, testing_this_round)
+        accuracies.append(accuracy)
 
     average = sum(accuracies)/ num_folds
+
     print('Cross-validated accuracy = {}'.format(average))
 def main():
     """The main function."""
