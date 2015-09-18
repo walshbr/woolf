@@ -135,6 +135,7 @@ def cross_validate(training_features, num_folds=10):
         classifier = nltk.NaiveBayesClassifier.train(training_this_round)
         accuracy = nltk.classify.accuracy(classifier, testing_this_round)
         accuracies.append(accuracy)
+        print('Accuracy for fold {} = {}'.format(i, accuracy))
 
     average = sum(accuracies)/ num_folds
 
