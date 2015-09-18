@@ -124,7 +124,7 @@ def produce_confusion_matrix(training_features, tagged_tokens, classifier, test_
     print(cm.pretty_format(sort_by_count=True, show_percents=True, truncate=9))
 
 def cross_validate(training_features, num_folds=10):
-    """Takes a set of training features, trains a classifier based on it, and cross validates it against a specified number of folds. Prints out the average accuracy for the classifier across num_folds."""
+    """Takes a set of training features, trains a classifier based on it, and cross validates it against a specified number of folds. Prints out the average accuracy for the classifier across num_folds as well as the individual accuracies for the subsections."""
     accuracies = []
     subset_size = int(len(training_features)/num_folds)
     for i in range(num_folds):
