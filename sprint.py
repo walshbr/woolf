@@ -8,12 +8,13 @@ out."""
 
 import nltk
 import nltk.corpus
-from nltk import wordpunct_tokenize
+from nltk import sent_tokenize, wordpunct_tokenize
 from nltk.corpus import names
 from nltk.corpus import brown
 from collections import deque
 from math import floor
 import random
+import pprint
 
 
 TAGGED = 'training_passages/tagged_text/mrs.dalloway.txt'
@@ -21,14 +22,16 @@ TEST_SET_RATIO = 0.2
 
 
 def tokenize_corpus(filename):
-    """Read the corpus into test and training sets."""
+    """Read the corpus a list sentences, each of which is a list of tokens."""
     with open(filename) as fin:
-        for token in wordpunct_tokenize(fin.read()):
-            if token.isalnum():
-                yield token
-            else:
-                for char in token:
-                    yield char
+        for sent in sent_tokenize(fin.read()):
+            sent_tokens = []
+            for token in wordpunct_tokenize(sent):
+                if token.isalnum():
+                    sent_tokens.append(token)
+                else:
+                    sent_tokens += token
+            yield sent_tokens
 
 
 def build_trainer(tagged_sents, default_tag='NN'):
@@ -115,12 +118,12 @@ def get_training_features(tagged_tokens, is_target=is_verb,
             yield (features, tag)
 
 
-def produce_confusion_matrix(training_features, tagged_tokens, classifier, test_size):
+def produce_confusion_matrix(test_features, classifier):
     """Produces a confusion matrix for the test classifier"""
 
-    gold = [feature for (__, feature) in training_features]
-    test = [classifier.classify(features) for (features, __) in get_training_features(tagged_tokens, is_target=is_word)]
-    cm = nltk.ConfusionMatrix(gold[:test_size], test[:test_size])
+    gold = [feature for (__, feature) in test_features]
+    test = [classifier.classify(features) for (features, __) in test_features]
+    cm = nltk.ConfusionMatrix(gold, test)
     print(cm.pretty_format(sort_by_count=True, show_percents=True, truncate=9))
 
 def cross_validate(training_features, num_folds=10):
@@ -143,17 +146,17 @@ def cross_validate(training_features, num_folds=10):
 
 def main():
     """The main function."""
-    tokens = list(tokenize_corpus(TAGGED))
     tagger = build_trainer(brown.tagged_sents(categories='news'))
-    tagged_tokens = tagger.tag(tokens)
+    tagged_tokens = []
+    for sent in tokenize_corpus(TAGGED):
+        tagged_tokens.append(tagger.tag(sent))
 
     # Identifying the features.
-    training_features = list(get_training_features(
-        tagged_tokens,
-        is_target=is_word,
-        feature_history=2,
-        ))
-
+    training_features = []
+    for sent in tagged_tokens:
+        training_features += get_training_features(
+            sent, is_target=is_word, feature_history=2,
+        )
 
     test_size = int(TEST_SET_RATIO * len(training_features))
     test_set = training_features[:test_size]
@@ -171,7 +174,7 @@ def main():
     classifier = nltk.NaiveBayesClassifier.train(training_set)
     # print('Accuracy = {}'.format(nltk.classify.accuracy(classifier, test_set)))
 
-    produce_confusion_matrix(training_features, tagged_tokens, classifier, test_size)
+    produce_confusion_matrix(test_set, classifier)
 
     # note - the classifier is currently getting rebuilt and trained inside the function. so it's not really being passed something to cross-validate, is it?
     cross_validate(training_features)
