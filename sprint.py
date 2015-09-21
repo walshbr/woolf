@@ -13,7 +13,7 @@ from nltk.corpus import names
 from nltk.corpus import brown
 from collections import deque
 from math import floor
-# import random
+import random
 
 
 TAGGED = 'training_passages/tagged_text/mrs.dalloway.txt'
@@ -155,13 +155,12 @@ def main():
         ))
 
 
-    test_size = int(TEST_SET_RATIO * len(training_features))       
-    test_set = training_features[:test_size]       
+    test_size = int(TEST_SET_RATIO * len(training_features))
+    test_set = training_features[:test_size]
     training_set = training_features[test_size:]
 
     # Dividing features into test and training sets.
-    # TODO: Add random shuffle back in.
-    # random.shuffle(training_features)
+    random.shuffle(training_features)
 
     # get a baseline classifier
     baseline_training = [(fs, False) for (fs, _) in training_set]
