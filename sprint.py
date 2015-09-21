@@ -154,20 +154,25 @@ def main():
         feature_history=2,
         ))
 
+
+    test_size = int(TEST_SET_RATIO * len(training_features))       
+    test_set = training_features[:test_size]       
+    training_set = training_features[test_size:]
+
     # Dividing features into test and training sets.
     # TODO: Add random shuffle back in.
     # random.shuffle(training_features)
 
     # get a baseline classifier
-    # baseline_training = [(fs, False) for (fs, _) in training_set]
-    # baseline = nltk.NaiveBayesClassifier.train(baseline_training)
-    # print('Baseline = {}'.format(nltk.classify.accuracy(baseline, test_set)))
+    baseline_training = [(fs, False) for (fs, _) in training_set]
+    baseline = nltk.NaiveBayesClassifier.train(baseline_training)
+    print('Baseline = {}'.format(nltk.classify.accuracy(baseline, test_set)))
 
     # # stay classy
-    # classifier = nltk.NaiveBayesClassifier.train(training_set)
+    classifier = nltk.NaiveBayesClassifier.train(training_set)
     # print('Accuracy = {}'.format(nltk.classify.accuracy(classifier, test_set)))
 
-    # produce_confusion_matrix(training_features, tagged_tokens, classifier, test_size)
+    produce_confusion_matrix(training_features, tagged_tokens, classifier, test_size)
 
     # note - the classifier is currently getting rebuilt and trained inside the function. so it's not really being passed something to cross-validate, is it?
     cross_validate(training_features)
