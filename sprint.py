@@ -12,26 +12,35 @@ from nltk import sent_tokenize, wordpunct_tokenize
 from nltk.corpus import names
 from nltk.corpus import brown
 from collections import deque
+import os
 # from math import floor
 import random
 # import pprint
 
 
-TAGGED = 'training_passages/tagged_text/mrs.dalloway.txt'
+TAGGED = 'training_passages/tagged_text/'
 TEST_SET_RATIO = 0.2
 
 
-def tokenize_corpus(filename):
+def tokenize_corpus(corpus):
     """Read the corpus a list sentences, each of which is a list of tokens."""
-    with open(filename) as fin:
-        for sent in sent_tokenize(fin.read()):
-            sent_tokens = []
-            for token in wordpunct_tokenize(sent):
-                if token.isalnum():
-                    sent_tokens.append(token)
-                else:
-                    sent_tokens += token
-            yield sent_tokens
+    if os.path.isdir(corpus):
+        corpus_dir = corpus
+        corpus = [
+            os.path.join(corpus_dir, fn) for fn in os.listdir(corpus_dir)
+        ]
+    else:
+        corpus = [corpus]
+    for filename in corpus:
+        with open(filename) as fin:
+            for sent in sent_tokenize(fin.read()):
+                sent_tokens = []
+                for token in wordpunct_tokenize(sent):
+                    if token.isalnum():
+                        sent_tokens.append(token)
+                    else:
+                        sent_tokens += token
+                yield sent_tokens
 
 
 def build_trainer(tagged_sents, default_tag='NN'):
