@@ -11,7 +11,7 @@ import nltk.corpus
 from nltk import sent_tokenize, wordpunct_tokenize
 from nltk.corpus import names
 from nltk.corpus import brown
-from collections import deque
+from collections import deque, namedtuple
 import os
 # from math import floor
 import random
@@ -20,6 +20,21 @@ import random
 
 TAGGED = 'training_passages/tagged_text/'
 TEST_SET_RATIO = 0.2
+
+
+FeatureContext = namedtuple('FeatureContext',
+                            ['history', 'current', 'lookahead'])
+TaggedToken = namedtuple('TaggedToken', ['token', 'tag'])
+
+
+def make_context(window):
+    """This makes a FeatureContext from a window of tokens (which will
+    become TaggedTokens.)"""
+    return FeatureContext(
+        [TaggedToken(*t) for t in window[:-2]],
+        TaggedToken(*window[-2]),
+        TaggedToken(*window[-1]),
+    )
 
 
 def tokenize_corpus(corpus):
@@ -55,11 +70,10 @@ def build_trainer(tagged_sents, default_tag='NN'):
     return tagger3
 
 
-def is_verb(tagged_word, _):
+def is_verb(context):
     """This returns True if the tagged word is any form of verb, but
     it ignores the rest of the context (the second parameter)."""
-    (_, tag) = tagged_word
-    return tag.startswith('VB')
+    return context.current.tag.startswith('VB')
 
 
 def windows(seq, window_size):
@@ -72,28 +86,27 @@ def windows(seq, window_size):
         yield list(window)
 
 
-def is_quote(tagged_token):
+def is_quote(context):
     """Is the tagged token a double-quote character?"""
-    (word, _) = tagged_token
-    return word in {"''", "``", '"', "^"}
+    return context.lookahead.token in {"''", "``", '"', "^"}
 
 
-def is_word(tagged_token, _):
+def is_word(context):
     """Is the target a word? This ignores the context of the token."""
-    return tagged_token[0].isalnum()
+    return context.current.token.isalnum()
 
 
-def get_features(history, current, is_target=is_verb):
+def get_features(context, is_target=is_verb):
     """This returns the feature set for the data in the current window."""
 
     featureset = None
 
-    if is_target(current, history):
+    if is_target(context):
         featureset = {
-            'token0': current[0],
-            'tag0': current[1],
+            'token0': context.current[0],
+            'tag0': context.current[1],
         }
-        history = reversed(list(history))
+        history = reversed(list(context.history))
         for (offset, (token, tag)) in enumerate(history):
             featureset['token{}'.format(offset+1)] = token
             featureset['tag{}'.format(offset+1)] = tag
@@ -101,10 +114,10 @@ def get_features(history, current, is_target=is_verb):
     return featureset
 
 
-def get_tag(_features, _history, _current, next, is_context=is_quote):
+def get_tag(_features, context, is_context=is_quote):
     """This returns the tag for the feature set to train against.
     """
-    return is_context(next)
+    return is_context(context)
 
 
 def get_training_features(tagged_tokens, is_target=is_verb,
@@ -115,12 +128,10 @@ def get_training_features(tagged_tokens, is_target=is_verb,
     for window in windows(tagged_tokens, window_size):
         if len(window) < 2:
             continue
-        history = window[:-2]
-        current = window[-2]
-        next = window[-1]
-        features = get_features(history, current, is_target)
+        context = make_context(window)
+        features = get_features(context, is_target)
         if features is not None:
-            tag = get_tag(features, history, current, next, is_context)
+            tag = get_tag(features, context, is_context)
             yield (features, tag)
 
 
