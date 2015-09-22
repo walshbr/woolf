@@ -12,9 +12,9 @@ from nltk import sent_tokenize, wordpunct_tokenize
 from nltk.corpus import names
 from nltk.corpus import brown
 from collections import deque
-from math import floor
+# from math import floor
 import random
-import pprint
+# import pprint
 
 
 TAGGED = 'training_passages/tagged_text/mrs.dalloway.txt'
@@ -123,23 +123,32 @@ def produce_confusion_matrix(test_features, classifier):
     cm = nltk.ConfusionMatrix(gold, test)
     print(cm.pretty_format(sort_by_count=True, show_percents=True, truncate=9))
 
+
 def cross_validate(training_features, num_folds=10):
-    """Takes a set of training features, trains a classifier based on it, and cross validates it against a specified number of folds. Prints out the average accuracy for the classifier across num_folds as well as the individual accuracies for the subsections."""
+    """Takes a set of training features, trains a classifier based on
+    it, and cross validates it against a specified number of
+    folds. Prints out the average accuracy for the classifier across
+    num_folds as well as the individual accuracies for the
+    subsections."""
     accuracies = []
     subset_size = int(len(training_features)/num_folds)
     for i in range(num_folds):
-        #this pulls out a chunk for testing and trains on the rest. And it cycles through. So it retrains on each section while testing it against stuff it hasn't seen.
+        # this pulls out a chunk for testing and trains on the
+        # rest. And it cycles through. So it retrains on each section
+        # while testing it against stuff it hasn't seen.
         accuracy = 0
         testing_this_round = training_features[i*subset_size:][:subset_size]
-        training_this_round = training_features[:i*subset_size] + training_features[(i+1)*subset_size:]
+        training_this_round = (training_features[:i*subset_size] +
+                               training_features[(i+1)*subset_size:])
         classifier = nltk.NaiveBayesClassifier.train(training_this_round)
         accuracy = nltk.classify.accuracy(classifier, testing_this_round)
         accuracies.append(accuracy)
         print('Accuracy for fold {} = {}'.format(i, accuracy))
 
-    average = sum(accuracies)/ num_folds
+    average = sum(accuracies) / num_folds
 
     print('Cross-validated accuracy = {}'.format(average))
+
 
 def main():
     """The main function."""
@@ -169,15 +178,21 @@ def main():
 
     # # stay classy
     classifier = nltk.NaiveBayesClassifier.train(training_set)
-    # print('Accuracy = {}'.format(nltk.classify.accuracy(classifier, test_set)))
+    print('Accuracy = {}'.format(nltk.classify.accuracy(classifier, test_set)))
 
     produce_confusion_matrix(test_set, classifier)
 
-    # note - the classifier is currently getting rebuilt and trained inside the function. so it's not really being passed something to cross-validate, is it?
+    # note - the classifier is currently getting rebuilt and trained
+    # inside the function. so it's not really being passed something
+    # to cross-validate, is it?
+
     cross_validate(training_features)
     # TODO: MOAR TRAINING!
 
-# question: the way I have things spaced with returns means that, sometimes when this is not the case in the text, two quotes will appear next to each other. If it blasts the line spaces out of existence, it would think that
+# question: the way I have things spaced with returns means that,
+# sometimes when this is not the case in the text, two quotes will
+# appear next to each other. If it blasts the line spaces out of
+# existence, it would think that
 
 # It was astonishing that a man of his
 # intellect could stoop so low as he did--but that was too harsh a
@@ -185,7 +200,12 @@ def main():
 
 # "Oh, but," said Lily, "think of his work!"
 
-# the "people's phrase" occurs in the context of a quote, but really that's just an artifact of the way i'm formatting the training data. So that might throw things off. But then, sometimes she DOES punctuate speech with a return before. But in this case I think the artifacts produced by it far exceed the positive examples in the corpus.
+# the "people's phrase" occurs in the context of a quote, but really
+# that's just an artifact of the way i'm formatting the training
+# data. So that might throw things off. But then, sometimes she DOES
+# punctuate speech with a return before. But in this case I think the
+# artifacts produced by it far exceed the positive examples in the
+# corpus.
 
 if __name__ == '__main__':
     main()
