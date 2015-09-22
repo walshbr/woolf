@@ -53,7 +53,7 @@ def is_verb(tagged_word, _):
     return tag.startswith('VB')
 
 
-def windows(seq, window_size, final_shifts=0):
+def windows(seq, window_size):
     """This iterates over window_size chunks of seq."""
     window = deque()
     for item in seq:
@@ -61,11 +61,6 @@ def windows(seq, window_size, final_shifts=0):
         if len(window) > window_size:
             window.popleft()
         yield list(window)
-    while window and final_shifts:
-        window.popleft()
-        final_shifts -= 1
-        if window:
-            yield list(window)
 
 
 def is_quote(tagged_token):
@@ -108,7 +103,7 @@ def get_training_features(tagged_tokens, is_target=is_verb,
     """This returns a sequence of feature sets and tags to train against for
     the input tokens."""
     window_size = feature_history + 2
-    for window in windows(tagged_tokens, window_size, 0):
+    for window in windows(tagged_tokens, window_size):
         if len(window) < 2:
             continue
         history = window[:-2]
