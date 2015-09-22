@@ -96,20 +96,17 @@ def is_word(context):
     return context.current.token.isalnum()
 
 
-def get_features(context, is_target=is_verb):
+def get_features(context):
     """This returns the feature set for the data in the current window."""
 
-    featureset = None
-
-    if is_target(context):
-        featureset = {
-            'token0': context.current[0],
-            'tag0': context.current[1],
-        }
-        history = reversed(list(context.history))
-        for (offset, (token, tag)) in enumerate(history):
-            featureset['token{}'.format(offset+1)] = token
-            featureset['tag{}'.format(offset+1)] = tag
+    featureset = {
+        'token0': context.current[0],
+        'tag0': context.current[1],
+    }
+    history = reversed(list(context.history))
+    for (offset, (token, tag)) in enumerate(history):
+        featureset['token{}'.format(offset+1)] = token
+        featureset['tag{}'.format(offset+1)] = tag
 
     return featureset
 
@@ -129,8 +126,8 @@ def get_training_features(tagged_tokens, is_target=is_verb,
         if len(window) < 2:
             continue
         context = make_context(window)
-        features = get_features(context, is_target)
-        if features is not None:
+        if is_target(context):
+            features = get_features(context)
             tag = get_tag(features, context, is_context)
             yield (features, tag)
 
