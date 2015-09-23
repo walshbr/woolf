@@ -15,7 +15,9 @@ from collections import deque, namedtuple
 import os
 # from math import floor
 import random
-# import pprint
+import operator
+import pprint
+import pickle
 
 
 TAGGED = 'training_passages/tagged_text/'
@@ -141,14 +143,15 @@ def produce_confusion_matrix(test_features, classifier):
     print(cm.pretty_format(sort_by_count=True, show_percents=True, truncate=9))
 
 
-def cross_validate(training_features, num_folds=10):
-    """Takes a set of training features, trains a classifier based on
-    it, and cross validates it against a specified number of
-    folds. Prints out the average accuracy for the classifier across
-    num_folds as well as the individual accuracies for the
-    subsections."""
+def cross_validate(cls, training_features, num_folds=10):
+    """Takes a set of classifier builder, training features, trains a
+    classifier based on it, and cross validates it against a specified
+    number of folds. Prints out the average accuracy for the
+    classifier across num_folds as well as the individual accuracies
+    for the subsections."""
+    print('Cross validating {}'.format(cls.__name__))
     accuracies = []
-    subset_size = int(len(training_features)/num_folds)
+    subset_size = int(len(training_features) / num_folds)
     for i in range(num_folds):
         # this pulls out a chunk for testing and trains on the
         # rest. And it cycles through. So it retrains on each section
@@ -157,7 +160,7 @@ def cross_validate(training_features, num_folds=10):
         testing_this_round = training_features[i*subset_size:][:subset_size]
         training_this_round = (training_features[:i*subset_size] +
                                training_features[(i+1)*subset_size:])
-        classifier = nltk.NaiveBayesClassifier.train(training_this_round)
+        classifier = cls.train(training_this_round)
         accuracy = nltk.classify.accuracy(classifier, testing_this_round)
         accuracies.append(accuracy)
         print('Accuracy for fold {} = {}'.format(i, accuracy))
@@ -165,6 +168,7 @@ def cross_validate(training_features, num_folds=10):
     average = sum(accuracies) / num_folds
 
     print('Cross-validated accuracy = {}'.format(average))
+    return average
 
 
 def main():
@@ -203,7 +207,28 @@ def main():
     # inside the function. so it's not really being passed something
     # to cross-validate, is it?
 
-    cross_validate(training_features)
+    classifiers = [
+        nltk.ConditionalExponentialClassifier,
+        nltk.DecisionTreeClassifier,
+        nltk.MaxentClassifier,
+        nltk.NaiveBayesClassifier,
+        nltk.PositiveNaiveBayesClassifier,
+    ]
+    print('TRAINING ALL CLASSIFIERS')
+    means = []
+    for clfr in classifiers:
+        means.append((clfr, cross_validate(clfr, training_features)))
+
+    means.sort(key=operator.itemgetter(1))
+    os.makedirs('classifiers')
+    print('Accurancies:')
+    for (cls, a) in means:
+        name = cls.__name__
+        output = os.path.join('classifiers', name + '.pickle')
+        print('{} => {}\t\t{}'.format(name, a, output))
+        classifier = cls.train(training_features)
+        with open(output, 'wb') as fout:
+            pickle.dump(classifier, fout)
     # TODO: MOAR TRAINING!
 
 # question: the way I have things spaced with returns means that,
