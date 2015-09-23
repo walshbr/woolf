@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
 
 
-"""This trains a naive Bayesian classifier on a corpus with "silent" quotations
-marked. It then tests that classifier for accuracy and prints that metric
-out."""
+"""This compares a number of classifiers on a corpus while looking for
+"silent" quotations marked in the training corpus with ^."""
 
+
+import argparse
+from collections import deque, namedtuple
+import random
+import operator
+import os
+import pickle
+import sys
 
 import nltk
 import nltk.corpus
 from nltk import sent_tokenize, wordpunct_tokenize
 from nltk.corpus import names
 from nltk.corpus import brown
-from collections import deque, namedtuple
-import os
-# from math import floor
-import random
-import operator
-import pprint
-import pickle
 
 
 TAGGED = 'training_passages/tagged_text/'
@@ -220,12 +220,35 @@ def report_classifier(cls, accuracy, training, test, featureset, outdir):
         pickle.dump(classifier, fout)
 
 
+def parse_args(argv=None):
+    """This parses the command line."""
+    argv = sys.argv[1:] if argv is None else argv
+    parser = argparse.ArgumentParser(description=__doc__)
+
+    parser.add_argument('-c', '--corpus', dest='corpus', action='store',
+                        default=TAGGED,
+                        help='The input directory containing the training '
+                             'corpus. Default = {}.'.format(TAGGED))
+    parser.add_argument('-r', '--ratio', dest='ratio', type=float,
+                        default=TEST_SET_RATIO,
+                        help='The ratio of documents to use as a test set. '
+                        'Default = {}'.format(TEST_SET_RATIO))
+    parser.add_argument('-o', '--output-dir', dest='output_dir',
+                        action='store', default='classifiers',
+                        help='The directory to write the pickled classifiers '
+                             'to. Default = ./classifiers/.')
+
+    return parser.parse_args(argv)
+
+
 def main():
     """The main function."""
-    tagged_tokens = get_tagged_tokens(TAGGED)
+    args = parse_args()
+
+    tagged_tokens = get_tagged_tokens(args.corpus)
     featuresets = get_all_training_features(tagged_tokens)
     random.shuffle(featuresets)
-    test_set, training_set = get_sets(featuresets, TEST_SET_RATIO)
+    test_set, training_set = get_sets(featuresets, args.ratio)
 
     # note - the classifier is currently getting rebuilt and trained
     # inside the function. so it's not really being passed something
@@ -236,20 +259,19 @@ def main():
         nltk.DecisionTreeClassifier,
         nltk.MaxentClassifier,
         nltk.NaiveBayesClassifier,
-        nltk.PositiveNaiveBayesClassifier,
+        # nltk.PositiveNaiveBayesClassifier,
     ]
-    print('TRAINING ALL CLASSIFIERS')
     means = [
         (cls, cross_validate(cls, featuresets)) for cls in classifiers
     ]
     means.sort(key=operator.itemgetter(1))
 
-    os.makedirs('classifiers')
+    os.makedirs(args.output_dir)
 
     print("Output\tAccuracy\tBaseline")
     for (cls, a) in means:
         report_classifier(cls, a, training_set, test_set, featuresets,
-                          'classifiers')
+                          args.output_dir)
 
     # TODO: MOAR TRAINING!
 
