@@ -171,37 +171,61 @@ def cross_validate(cls, training_features, num_folds=10):
     return average
 
 
-def main():
-    """The main function."""
+def get_tagged_tokens(corpus):
+    """This tokenizes, segments, and tags all the files in a directory."""
     tagger = build_trainer(brown.tagged_sents(categories='news'))
     tagged_tokens = []
     for sent in tokenize_corpus(TAGGED):
         tagged_tokens.append(tagger.tag(sent))
+    return tagged_tokens
 
-    # Identifying the features.
+
+def get_all_training_features(tagged_tokens):
+    """This takes tokenized, segmented, and tagged files and gets
+    training features."""
     training_features = []
     for sent in tagged_tokens:
         training_features += get_training_features(
             sent, is_target=is_word, feature_history=2,
         )
+    return training_features
 
-    test_size = int(TEST_SET_RATIO * len(training_features))
-    test_set = training_features[:test_size]
-    training_set = training_features[test_size:]
 
-    # Dividing features into test and training sets.
-    random.shuffle(training_features)
+def get_sets(featuresets, ratio):
+    """This breaks a sequence of feature sets into two groups based on
+    the ratio."""
+    test_size = int(ratio * len(featuresets))
+    test_set = featuresets[:test_size]
+    training_set = featuresets[test_size:]
+    return (test_set, training_set)
 
-    # get a baseline classifier
-    baseline_training = [(fs, False) for (fs, _) in training_set]
-    baseline = nltk.NaiveBayesClassifier.train(baseline_training)
-    print('Baseline = {}'.format(nltk.classify.accuracy(baseline, test_set)))
 
-    # # stay classy
-    classifier = nltk.NaiveBayesClassifier.train(training_set)
-    print('Accuracy = {}'.format(nltk.classify.accuracy(classifier, test_set)))
+def get_baseline(cls, training, test, base_value):
+    """This returns the accuracy for a baseline training, i.e.,
+    training based on everything being `base_value`."""
+    baseline = [(fs, base_value) for (fs, _) in training]
+    classifier = cls.train(baseline)
+    return nltk.classify.accuracy(classifier, test)
 
-    produce_confusion_matrix(test_set, classifier)
+
+def report_classifier(cls, accuracy, training, test, featureset, outdir):
+    """This reports on a classifier, comparing it to a baseline, and
+    pickling it into a directory."""
+    name = cls.__name__
+    output = os.path.join(outdir, name + '.pickle')
+    baseline = get_baseline(cls, training, test, False)
+    print('\t'.join([output, accuracy, baseline]))
+    classifier = cls.train(featureset)
+    with open(output, 'wb') as fout:
+        pickle.dump(classifier, fout)
+
+
+def main():
+    """The main function."""
+    tagged_tokens = get_tagged_tokens(TAGGED)
+    featuresets = get_all_training_features(tagged_tokens)
+    random.shuffle(featuresets)
+    test_set, training_set = get_sets(featuresets, TEST_SET_RATIO)
 
     # note - the classifier is currently getting rebuilt and trained
     # inside the function. so it's not really being passed something
@@ -215,20 +239,18 @@ def main():
         nltk.PositiveNaiveBayesClassifier,
     ]
     print('TRAINING ALL CLASSIFIERS')
-    means = []
-    for clfr in classifiers:
-        means.append((clfr, cross_validate(clfr, training_features)))
-
+    means = [
+        (cls, cross_validate(cls, featuresets)) for cls in classifiers
+    ]
     means.sort(key=operator.itemgetter(1))
+
     os.makedirs('classifiers')
-    print('Accurancies:')
+
+    print("Output\tAccuracy\tBaseline")
     for (cls, a) in means:
-        name = cls.__name__
-        output = os.path.join('classifiers', name + '.pickle')
-        print('{} => {}\t\t{}'.format(name, a, output))
-        classifier = cls.train(training_features)
-        with open(output, 'wb') as fout:
-            pickle.dump(classifier, fout)
+        report_classifier(cls, a, training_set, test_set, featuresets,
+                          'classifiers')
+
     # TODO: MOAR TRAINING!
 
 # question: the way I have things spaced with returns means that,
