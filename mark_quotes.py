@@ -9,8 +9,6 @@ import argparse
 import pickle
 import sys
 
-import nltk
-
 import train_quotes
 
 
