@@ -7,10 +7,13 @@
 
 import argparse
 from collections import deque, namedtuple
-import random
+import itertools
+from multiprocessing.pool import Pool
 import operator
 import os
 import pickle
+import random
+import statistics
 import sys
 
 import nltk
@@ -27,6 +30,9 @@ TEST_SET_RATIO = 0.2
 FeatureContext = namedtuple('FeatureContext',
                             ['history', 'current', 'lookahead'])
 TaggedToken = namedtuple('TaggedToken', ['token', 'tag'])
+
+first = operator.itemgetter(0)
+second = operator.itemgetter(1)
 
 
 def make_context(window):
@@ -171,6 +177,34 @@ def cross_validate(cls, training_features, num_folds=10):
     return average
 
 
+def cross_validate_sets(cls, training_features, num_folds=10):
+    """Takes a set of classifier builder, training features, trains a
+    classifier based on it, and cross validates it against a specified
+    number of folds. It yields the classifier class and accuracy."""
+    subset_size = int(len(training_features) / num_folds)
+    for i in range(num_folds):
+        testing_this_round = training_features[i*subset_size:][:subset_size]
+        training_this_round = (training_features[:i*subset_size] +
+                               training_features[(i+1)*subset_size:])
+        yield (cls, training_this_round, testing_this_round)
+
+
+def cross_validate_p(cls, training, test):
+    """This performs the cross-validation on one fold."""
+    classifier = cls.train(training)
+    accuracy = nltk.classify.accuracy(classifier, test)
+    return (cls, accuracy)
+
+
+def cross_validate_means(accuracies):
+    """This takes the means output from cross_validate_p, groups them
+    by class, and averages them. It yields the classes and averages."""
+    accuracies = list(accuracies)
+    accuracies.sort(key=first)
+    for (cls, accuracy) in itertools.groupby(accuracies, first):
+        yield (cls, statistics.mean(x for (_, x) in accuracy))
+
+
 def get_tagged_tokens(corpus):
     """This tokenizes, segments, and tags all the files in a directory."""
     tagger = build_trainer(brown.tagged_sents(categories='news'))
@@ -261,10 +295,16 @@ def main():
         nltk.NaiveBayesClassifier,
         # nltk.PositiveNaiveBayesClassifier,
     ]
-    means = [
-        (cls, cross_validate(cls, featuresets)) for cls in classifiers
-    ]
-    means.sort(key=operator.itemgetter(1))
+    folds = itertools.chain.from_iterable(
+        cross_validate_sets(cls, featuresets)
+        for cls in classifiers
+    )
+    with Pool() as pool:
+        means = cross_validate_means(
+            pool.starmap(cross_validate_p, folds, 3),
+            )
+
+    means.sort(key=second)
 
     os.makedirs(args.output_dir)
 
