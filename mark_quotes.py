@@ -15,11 +15,28 @@ import train_quotes
 
 
 def get_training_features(tokens):
+    """This wraps `get_training_features` from `train_quotes` with the
+    parameters used in training. This should probably be stored
+    somewhere."""
     return train_quotes.get_training_features(
         tokens,
         is_target=train_quotes.is_word,
         feature_history=2,
     )
+
+
+def load_classifier(filename):
+    """Loads the classifier from pickled into `filename`."""
+    with open(filename, 'rb') as fin:
+        return pickle.load(fin)
+
+
+def insert_quotes(classifier, fsets):
+    """Inserts ^ quotes wherever the classifier says they should be."""
+    for feature in fsets:
+        yield feature['token0']
+        if classifier.classify(feature):
+            yield "^"
 
 
 def parse_args(argv=None):
@@ -40,21 +57,15 @@ def parse_args(argv=None):
 
 def main():
     args = parse_args()
-
-    with open(args.classifier, 'rb') as fin:
-        classifier = pickle.load(fin)
+    classifier = load_classifier(args.classifier)
 
     with open(args.output, 'w') as fout:
         for sent_tokens in train_quotes.tokenize_corpus(args.input):
-            buffer = []
-            fsets = get_training_features(sent_tokens)
-
-            for feature in fsets:
-                buffer.append(feature['token0'])
-                if classifier.classify(feature):
-                    buffer.append("^")
-
-            fout.write(' '.join(buffer) + '\n')
+            sent = insert_quotes(
+                classifier,
+                get_training_features(sent_tokens),
+            )
+            fout.write(' '.join(sent) + '\n')
 
 
 if __name__ == '__main__':
