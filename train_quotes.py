@@ -310,13 +310,14 @@ def main():
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
-    writer = csv.writer(sys.stdout)
-    writer.writerow(('Output', 'Accuracy', 'Baseline'))
-    writer.writerows(
-        report_classifier(cls, a, training_set, test_set, featuresets,
-                          args.output_dir)
-        for (cls, a) in means
-    )
+    with open(os.path.join(args.output_dir, 'results.csv'), 'wb') as fout:
+        writer = csv.writer(fout)
+        writer.writerow(('Output', 'Accuracy', 'Baseline'))
+        writer.writerows(
+            report_classifier(cls, a, training_set, test_set, featuresets,
+                              args.output_dir)
+            for (cls, a) in means
+        )
 
     # TODO: MOAR TRAINING!
 
