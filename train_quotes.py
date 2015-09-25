@@ -7,6 +7,7 @@
 
 import argparse
 from collections import deque, namedtuple
+import csv
 import itertools
 from multiprocessing.pool import Pool
 import operator
@@ -200,7 +201,7 @@ def cross_validate_means(accuracies):
     """This takes the means output from cross_validate_p, groups them
     by class, and averages them. It yields the classes and averages."""
     accuracies = list(accuracies)
-    accuracies.sort(key=first)
+    accuracies.sort(key=lambda x: first(x).__name__)
     for (cls, accuracy) in itertools.groupby(accuracies, first):
         yield (cls, statistics.mean(x for (_, x) in accuracy))
 
@@ -248,10 +249,10 @@ def report_classifier(cls, accuracy, training, test, featureset, outdir):
     name = cls.__name__
     output = os.path.join(outdir, name + '.pickle')
     baseline = get_baseline(cls, training, test, False)
-    print('\t'.join([output, accuracy, baseline]))
     classifier = cls.train(featureset)
     with open(output, 'wb') as fout:
         pickle.dump(classifier, fout)
+    return (output, accuracy, baseline)
 
 
 def parse_args(argv=None):
@@ -300,18 +301,22 @@ def main():
         for cls in classifiers
     )
     with Pool() as pool:
-        means = cross_validate_means(
+        means = list(cross_validate_means(
             pool.starmap(cross_validate_p, folds, 3),
-            )
+        ))
 
     means.sort(key=second)
 
-    os.makedirs(args.output_dir)
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir)
 
-    print("Output\tAccuracy\tBaseline")
-    for (cls, a) in means:
+    writer = csv.writer(sys.stdout)
+    writer.writerow(('Output', 'Accuracy', 'Baseline'))
+    writer.writerows(
         report_classifier(cls, a, training_set, test_set, featuresets,
                           args.output_dir)
+        for (cls, a) in means
+    )
 
     # TODO: MOAR TRAINING!
 
