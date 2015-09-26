@@ -1,0 +1,19 @@
+#!/bin/bash
+
+CLASSIFIERS=classifiers
+CORPUS=corpus
+
+for CLASS in $(ls $CLASSIFIERS); do
+	BASE=${CLASS%.pickle}
+	echo $BASE
+	mkdir -p $BASE
+	for DOC in $(ls $CORPUS); do
+		echo "	$DOC"
+		./mark_quotes.py \
+			--input $CORPUS/$DOC \
+			--classifier $CLASSIFIERS/$CLASS \
+			--output $BASE/$DOC
+		exit 1
+	done
+done
+
