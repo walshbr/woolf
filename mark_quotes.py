@@ -4,6 +4,13 @@
 """This takes a classifier and an input document and marks the quotes
 in it, based on the classifier."""
 
+# TODO: Don't strip out existing punctuation.
+
+# TODO: Only show new quotation marks.
+
+# TODO: For some reason, the output is going to the wrong file name
+# (e.g., DecisionTree/1915... has the data from corpus/1922...).
+
 
 import argparse
 import pickle
