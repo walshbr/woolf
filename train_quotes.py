@@ -4,6 +4,20 @@
 """This compares a number of classifiers on a corpus while looking for
 "silent" quotations marked in the training corpus with ^."""
 
+# TODO: instead of looking for quote insertions, look for whether the
+# current word is in a quote, and include that in the previous words'
+# data in the feature set (for each word, look at the token, the tag,
+# and the quote).
+
+# TODO: Leave in punctuation (except for quotes) for training.
+
+# TODO: Include a raw version of the corpus (maybe including
+# whitespace) and ignore for training, classifying, but use when
+# re-creating the input (with quotes inserted).
+
+# TODO: Want to reproduce the histogram of quotation marks with the
+# "silent" quotes.
+
 
 import argparse
 from collections import deque, namedtuple
