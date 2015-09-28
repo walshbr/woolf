@@ -13,7 +13,5 @@ for CLASS in $(ls $CLASSIFIERS); do
 			--input $CORPUS/$DOC \
 			--classifier $CLASSIFIERS/$CLASS \
 			--output $BASE/$DOC
-		exit 1
 	done
 done
-

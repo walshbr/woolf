@@ -31,7 +31,7 @@ def load_classifier(filename):
 
 def insert_quotes(classifier, fsets):
     """Inserts ^ quotes wherever the classifier says they should be."""
-    for feature in fsets:
+    for (feature, _) in fsets:
         yield feature['token0']
         if classifier.classify(feature):
             yield "^"
@@ -58,7 +58,7 @@ def main():
     classifier = load_classifier(args.classifier)
 
     with open(args.output, 'w') as fout:
-        for sent_tokens in train_quotes.tokenize_corpus(args.input):
+        for sent_tokens in train_quotes.get_tagged_tokens(args.input):
             sent = insert_quotes(
                 classifier,
                 get_training_features(sent_tokens),
