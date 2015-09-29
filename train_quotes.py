@@ -324,7 +324,7 @@ def main():
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
-    with open(os.path.join(args.output_dir, 'results.csv'), 'wb') as fout:
+    with open(os.path.join(args.output_dir, 'results.csv'), 'w') as fout:
         writer = csv.writer(fout)
         writer.writerow(('Output', 'Accuracy', 'Baseline'))
         writer.writerows(
