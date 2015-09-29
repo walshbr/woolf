@@ -174,9 +174,7 @@ def cross_validate(cls, training_features, num_folds=10):
     accuracies = []
     subset_size = int(len(training_features) / num_folds)
     for i in range(num_folds):
-        # this pulls out a chunk for testing and trains on the
-        # rest. And it cycles through. So it retrains on each section
-        # while testing it against stuff it hasn't seen.
+
         accuracy = 0
         testing_this_round = training_features[i*subset_size:][:subset_size]
         training_this_round = (training_features[:i*subset_size] +
@@ -299,10 +297,6 @@ def main():
     random.shuffle(featuresets)
     test_set, training_set = get_sets(featuresets, args.ratio)
 
-    # note - the classifier is currently getting rebuilt and trained
-    # inside the function. so it's not really being passed something
-    # to cross-validate, is it?
-
     classifiers = [
         nltk.ConditionalExponentialClassifier,
         nltk.DecisionTreeClassifier,
@@ -334,24 +328,6 @@ def main():
         )
 
     # TODO: MOAR TRAINING!
-
-# question: the way I have things spaced with returns means that,
-# sometimes when this is not the case in the text, two quotes will
-# appear next to each other. If it blasts the line spaces out of
-# existence, it would think that
-
-# It was astonishing that a man of his
-# intellect could stoop so low as he did--but that was too harsh a
-# phrase--could depend so much as he did upon people's praise.
-
-# "Oh, but," said Lily, "think of his work!"
-
-# the "people's phrase" occurs in the context of a quote, but really
-# that's just an artifact of the way i'm formatting the training
-# data. So that might throw things off. But then, sometimes she DOES
-# punctuate speech with a return before. But in this case I think the
-# artifacts produced by it far exceed the positive examples in the
-# corpus.
 
 if __name__ == '__main__':
     main()
