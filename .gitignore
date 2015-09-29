@@ -14,6 +14,10 @@ notes/
 
 # results
 data_collections/
+results/
+mark_quotes_questions.py
+train_quotes_questions.py
+classifiers/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
