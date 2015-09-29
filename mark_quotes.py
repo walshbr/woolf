@@ -9,7 +9,7 @@ in it, based on the classifier."""
 # TODO: Only show new quotation marks.
 
 # TODO: For some reason, the output is going to the wrong file name
-# (e.g., DecisionTree/1915... has the data from corpus/1922...).
+# (e.g., DecisionTree/1915... has the data from corpus/1922...). Note: actually what's getting marked is all of the stuff from the training passages. They're all getting put into a big mush together, and then it goes through and marks them. So Jacob's Room just shows up first in the file because it's first in the training passage directory. It actually tries to tag all the training passages. So that means that it's not actually pulling in the input file - right?
 
 
 import argparse
@@ -66,6 +66,7 @@ def main():
 
     with open(args.output, 'w') as fout:
         for sent_tokens in train_quotes.get_tagged_tokens(args.input):
+            print(sent_tokens)
             sent = insert_quotes(
                 classifier,
                 get_training_features(sent_tokens),
