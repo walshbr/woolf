@@ -62,11 +62,11 @@ def parse_args(argv=None):
 
 def main():
     args = parse_args()
+    print(args)
     classifier = load_classifier(args.classifier)
 
     with open(args.output, 'w') as fout:
         for sent_tokens in train_quotes.get_tagged_tokens(args.input):
-            print(sent_tokens)
             sent = insert_quotes(
                 classifier,
                 get_training_features(sent_tokens),

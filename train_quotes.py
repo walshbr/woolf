@@ -218,11 +218,11 @@ def cross_validate_means(accuracies):
         yield (cls, statistics.mean(x for (_, x) in accuracy))
 
 
-def get_tagged_tokens(corpus):
+def get_tagged_tokens(corpus=TAGGED):
     """This tokenizes, segments, and tags all the files in a directory."""
     tagger = build_trainer(brown.tagged_sents(categories='news'))
     tagged_tokens = []
-    for sent in tokenize_corpus(TAGGED):
+    for sent in tokenize_corpus(corpus):
         tagged_tokens.append(tagger.tag(sent))
     return tagged_tokens
 
