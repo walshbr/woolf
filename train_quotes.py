@@ -30,6 +30,7 @@ import pickle
 import random
 import statistics
 import sys
+import re
 
 import nltk
 import nltk.corpus
@@ -61,7 +62,7 @@ def make_context(window):
 
 
 def tokenize_corpus(corpus):
-    """Read the corpus a list sentences, each of which is a list of tokens."""
+    """Read the corpus a list sentences, each of which is a list of tokens and the spans in which they occur in the text."""
     if os.path.isdir(corpus):
         corpus_dir = corpus
         corpus = [
@@ -73,11 +74,9 @@ def tokenize_corpus(corpus):
         with open(filename) as fin:
             for sent in sent_tokenize(fin.read()):
                 sent_tokens = []
-                for token in wordpunct_tokenize(sent):
-                    if token.isalnum():
-                        sent_tokens.append(token)
-                    else:
-                        sent_tokens += token
+                matches = list(re.finditer(r'\w+|[\'\"\/^/\,\-\:\.\;\?\!\(\0]', sent))
+                for match in matches:
+                    sent_tokens.append((match.group(0), match.span()))
                 yield sent_tokens
 
 
