@@ -18,6 +18,8 @@
 # TODO: Want to reproduce the histogram of quotation marks with the
 # "silent" quotes.
 
+# TODO: Refine the POS tagger so that it catches punctuation appropriately. It's catching a lot of it in the default tagger as NN right now.
+
 
 import argparse
 from collections import deque, namedtuple
@@ -74,7 +76,7 @@ def tokenize_corpus(corpus):
         with open(filename) as fin:
             for sent in sent_tokenize(fin.read()):
                 sent_tokens = []
-                matches = list(re.finditer(r'\w+|[\'\"\/^/\,\-\:\.\;\?\!\(\0]', sent))
+                matches = list(re.finditer(r'\w+|[\'\"\/^/\,\-\:\.\;\?\!\(0-9]', sent))
                 for match in matches:
                     sent_tokens.append((match.group(0), match.span()))
                 yield sent_tokens
@@ -220,10 +222,14 @@ def cross_validate_means(accuracies):
 def get_tagged_tokens(corpus=TAGGED):
     """This tokenizes, segments, and tags all the files in a directory."""
     tagger = build_trainer(brown.tagged_sents(categories='news'))
-    tagged_tokens = []
-    for sent in tokenize_corpus(corpus):
-        tagged_tokens.append(tagger.tag(sent))
-    return tagged_tokens
+    tagged_spanned_tokens = []
+    tokens_and_spans = tokenize_corpus(corpus)
+    for sent in tokens_and_spans:
+        to_tag = [token for (token,_) in sent]
+        spans = [span for (_,span) in sent]
+        sent_tagged_tokens = tagger.tag(to_tag)
+        tagged_spanned_tokens.append(list(zip(sent_tagged_tokens, spans)))
+    return tagged_spanned_tokens
 
 
 def get_all_training_features(tagged_tokens):
