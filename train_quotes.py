@@ -302,11 +302,8 @@ def main():
     """The main function."""
     args = parse_args()
 
-    tagged_tokens = []
-    for sent in get_tagged_tokens(args.corpus):
-        sent_tokens = [token for (token,_) in sent]
-        tagged_tokens.append(sent_tokens)
-
+    tagged_tokens = [[token for (token,_) in sent]for sent in get_tagged_tokens(args.corpus)]
+    
     print(tagged_tokens)
     featuresets = get_all_training_features(tagged_tokens)
     random.shuffle(featuresets)
