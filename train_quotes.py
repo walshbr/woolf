@@ -18,7 +18,11 @@
 # TODO: Want to reproduce the histogram of quotation marks with the
 # "silent" quotes.
 
+#B's to dos:
+
 # TODO: Refine the POS tagger so that it catches punctuation appropriately. It's catching a lot of it in the default tagger as NN right now.
+
+# TODO: potentially strip out returns before tokenizing so that the spans account for the whole work. Right now they give spans on a sentence by sentence basis.
 
 
 import argparse
@@ -56,6 +60,7 @@ second = operator.itemgetter(1)
 def make_context(window):
     """This makes a FeatureContext from a window of tokens (which will
     become TaggedTokens.)"""
+    print(window)
     return FeatureContext(
         [TaggedToken(*t) for t in window[:-2]],
         TaggedToken(*window[-2]),
@@ -297,7 +302,14 @@ def main():
     """The main function."""
     args = parse_args()
 
-    tagged_tokens = get_tagged_tokens(args.corpus)
+    tagged_tokens = []
+    for sent in get_tagged_tokens(args.corpus):
+        sent_tokens = []
+        for (token,_) in sent:
+            sent_tokens.append(token)
+        tagged_tokens.append(sent_tokens)
+
+    print(tagged_tokens)
     featuresets = get_all_training_features(tagged_tokens)
     random.shuffle(featuresets)
     test_set, training_set = get_sets(featuresets, args.ratio)
