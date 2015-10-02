@@ -33,12 +33,17 @@ def load_classifier(filename):
         return pickle.load(fin)
 
 
-def insert_quotes(classifier, fsets):
+def insert_quotes(classifier, fsets, sentence):
     """Inserts ^ quotes wherever the classifier says they should be."""
-    for (feature, _) in fsets:
-        yield feature['token0']
-        if classifier.classify(feature):
-            yield "^"
+    # print(list(fsets))
+    # print(sentence)
+    # print("*****")
+    for ((token,_), span) in sentence:
+        yield token
+        for (feature, _) in fsets:
+            if token == feature['token0'] and classifier.classify(feature):
+                yield "^"            
+
 
 
 def parse_args(argv=None):
@@ -62,11 +67,16 @@ def main():
     print(args)
     classifier = load_classifier(args.classifier)
 
+
     with open(args.output, 'w') as fout:
-        for sent_tokens in train_quotes.get_tagged_tokens(args.input):
+        tagged_tokens = [sent for sent in train_quotes.get_tagged_tokens(args.input)]
+        for sentence in tagged_tokens:
+            tokens = [token for (token, _) in sentence]
+            spans = [span for (_, span) in sentence]
             sent = insert_quotes(
                 classifier,
-                get_training_features(sent_tokens),
+                get_training_features(tokens),
+                sentence
             )
             fout.write(' '.join(sent) + '\n')
 
