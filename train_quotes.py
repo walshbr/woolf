@@ -60,7 +60,6 @@ second = operator.itemgetter(1)
 def make_context(window):
     """This makes a FeatureContext from a window of tokens (which will
     become TaggedTokens.)"""
-    print(window)
     return FeatureContext(
         [TaggedToken(*t) for t in window[:-2]],
         TaggedToken(*window[-2]),
