@@ -304,9 +304,7 @@ def main():
 
     tagged_tokens = []
     for sent in get_tagged_tokens(args.corpus):
-        sent_tokens = []
-        for (token,_) in sent:
-            sent_tokens.append(token)
+        sent_tokens = [token for (token,_) in sent]
         tagged_tokens.append(sent_tokens)
 
     print(tagged_tokens)
