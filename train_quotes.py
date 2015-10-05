@@ -18,6 +18,8 @@
 # TODO: Want to reproduce the histogram of quotation marks with the
 # "silent" quotes.
 
+#TODO: record line number in tokenizer.
+
 #B's to dos:
 
 # TODO: Refine the POS tagger so that it catches punctuation appropriately. It's catching a lot of it in the default tagger as NN right now.
