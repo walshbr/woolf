@@ -63,8 +63,7 @@ def parse_args(argv=None):
 
 
 def main():
-    args = parse_args()
-    print(args)
+    args = parse_args()  
     classifier = load_classifier(args.classifier)
 
 
@@ -75,7 +74,7 @@ def main():
             spans = [span for (_, span) in sentence]
             sent = insert_quotes(
                 classifier,
-                get_training_features(tokens),
+                get_training_features(sentence),
                 sentence
             )
             fout.write(' '.join(sent) + '\n')
