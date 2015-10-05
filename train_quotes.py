@@ -24,6 +24,7 @@
 
 # TODO: potentially strip out returns before tokenizing so that the spans account for the whole work. Right now they give spans on a sentence by sentence basis.
 
+# eric - trying to keep the spans throughout the training features so that they're associated but not actually used to train the classifier, if that makes sense. trying to do that by changing the named tuple so that a token has a start and end in the original file.
 
 import argparse
 from collections import deque, namedtuple
@@ -51,7 +52,7 @@ TEST_SET_RATIO = 0.2
 
 FeatureContext = namedtuple('FeatureContext',
                             ['history', 'current', 'lookahead'])
-TaggedToken = namedtuple('TaggedToken', ['token', 'tag'])
+TaggedToken = namedtuple('TaggedToken',['token', 'tag', 'start', 'end'])
 
 first = operator.itemgetter(0)
 second = operator.itemgetter(1)
@@ -60,6 +61,7 @@ second = operator.itemgetter(1)
 def make_context(window):
     """This makes a FeatureContext from a window of tokens (which will
     become TaggedTokens.)"""
+    print(window)
     return FeatureContext(
         [TaggedToken(*t) for t in window[:-2]],
         TaggedToken(*window[-2]),
@@ -144,7 +146,6 @@ def get_tag(_features, context, is_context=is_quote):
     """
     return is_context(context)
 
-
 def get_training_features(tagged_tokens, is_target=is_verb,
                           is_context=is_quote, feature_history=0):
     """This returns a sequence of feature sets and tags to train against for
@@ -153,11 +154,14 @@ def get_training_features(tagged_tokens, is_target=is_verb,
     for window in windows(tagged_tokens, window_size):
         if len(window) < 2:
             continue
+        # make sure that make_context and get_features can work
+        window = [element for tupl in window for element in tupl]
         context = make_context(window)
         if is_target(context):
             features = get_features(context)
+            span = (context.current.start, context.current.end)
             tag = get_tag(features, context, is_context)
-            yield (features, tag)
+            yield (features, span, tag)
 
 
 def produce_confusion_matrix(test_features, classifier):
@@ -301,10 +305,11 @@ def main():
     """The main function."""
     args = parse_args()
 
-    tagged_tokens = [[token for (token,_) in sent]for sent in get_tagged_tokens(args.corpus)]
+# this line will need to go when it's actually working.
+    # tagged_tokens = [[token for (token,_) in sent]for sent in get_tagged_tokens(args.corpus)]
     
-    print(tagged_tokens)
-    featuresets = get_all_training_features(tagged_tokens)
+    # print(tagged_tokens)
+    featuresets = get_all_training_features(get_tagged_tokens(args.corpus)
     random.shuffle(featuresets)
     test_set, training_set = get_sets(featuresets, args.ratio)
 
