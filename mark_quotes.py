@@ -8,8 +8,6 @@ in it, based on the classifier."""
 
 # TODO: Only show new quotation marks.
 
-# TODO: get lines from input to the insert quotes function.
-
 
 import argparse
 from collections import deque
