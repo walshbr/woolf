@@ -20,8 +20,6 @@
 
 # TODO: Refine the POS tagger so that it catches punctuation appropriately. It's catching a lot of it in the default tagger as NN right now.
 
-# eric - trying to keep the spans throughout the training features so that they're associated but not actually used to train the classifier, if that makes sense. trying to do that by changing the named tuple so that a token has a start and end in the original file.
-
 # TODO: Class for featureset, tag, and other processing (so we can
 # swap them out as a group together)
 
