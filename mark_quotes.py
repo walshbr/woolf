@@ -42,9 +42,9 @@ def insert_quotes(classifier, fsets, sentence):
     # print("*****")
     for ((token,_), span) in sentence:
         yield token
-        for (feature, _) in fsets:
+        for (feature, _span, _tag) in fsets:
             if token == feature['token0'] and classifier.classify(feature):
-                yield "^"            
+                yield "^"
 
 
 
@@ -65,7 +65,7 @@ def parse_args(argv=None):
 
 
 def main():
-    args = parse_args()  
+    args = parse_args()
     classifier = load_classifier(args.classifier)
 
 

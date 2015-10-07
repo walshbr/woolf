@@ -60,15 +60,22 @@ first = operator.itemgetter(0)
 second = operator.itemgetter(1)
 
 
+# [((TOKEN, TAG), (START, END))] -> FeatureContext
 def make_context(window):
     """This makes a FeatureContext from a window of tokens (which will
     become TaggedTokens.)"""
-    print(window)
     return FeatureContext(
-        [TaggedToken(*t) for t in window[:-2]],
-        TaggedToken(*window[-2]),
-        TaggedToken(*window[-1]),
+        [tagged_token(t) for t in window[:-2]],
+        tagged_token(window[-2]),
+        tagged_token(window[-1]),
     )
+
+
+def tagged_token(token_span):
+    """This takes an input of ((TOKEN, TAG), (START, END)) and returns
+    a TaggedToken."""
+    ((token, tag), (start, end)) = token_span
+    return TaggedToken(token, tag, start, end)
 
 
 def tokenize_corpus(corpus):
@@ -108,6 +115,7 @@ def is_verb(context):
     return context.current.tag.startswith('VB')
 
 
+# [x] -> Int -> [[x]]
 def windows(seq, window_size):
     """This iterates over window_size chunks of seq."""
     window = deque()
@@ -128,6 +136,7 @@ def is_word(context):
     return context.current.token.isalnum()
 
 
+# FeatureContext -> dict
 def get_features(context):
     """This returns the feature set for the data in the current window."""
 
@@ -136,32 +145,40 @@ def get_features(context):
         'tag0': context.current[1],
     }
     history = reversed(list(context.history))
-    for (offset, (token, tag)) in enumerate(history):
+    for (offset, (token, tag, _start, _end)) in enumerate(history):
         featureset['token{}'.format(offset+1)] = token
         featureset['tag{}'.format(offset+1)] = tag
 
     return featureset
 
 
+# dict -> FeatureContext -> Bool
 def get_tag(_features, context, is_context=is_quote):
     """This returns the tag for the feature set to train against.
     """
     return is_context(context)
 
+
+# [((TOKEN, TAG), (START, END))]
+# -> [(FEATURES :: dict, SPAN :: (Int, Int), TAG :: Bool)]
 def get_training_features(tagged_tokens, is_target=is_verb,
                           is_context=is_quote, feature_history=0):
     """This returns a sequence of feature sets and tags to train against for
     the input tokens."""
     window_size = feature_history + 2
     for window in windows(tagged_tokens, window_size):
+        # window :: [((TOKEN, TAG), (START, END))]
         if len(window) < 2:
             continue
         # make sure that make_context and get_features can work
-        window = [element for tupl in window for element in tupl]
+        # context :: FeatureContext
         context = make_context(window)
         if is_target(context):
+            # features :: dict
             features = get_features(context)
+            # span :: (Int, Int)
             span = (context.current.start, context.current.end)
+            # tag :: Bool
             tag = get_tag(features, context, is_context)
             yield (features, span, tag)
 
@@ -229,6 +246,7 @@ def cross_validate_means(accuracies):
         yield (cls, statistics.mean(x for (_, x) in accuracy))
 
 
+# FileName -> [[((TOKEN, TAG), (START, END))]]
 def get_tagged_tokens(corpus=TAGGED):
     """This tokenizes, segments, and tags all the files in a directory."""
     tagger = build_trainer(brown.tagged_sents(categories='news'))
@@ -242,6 +260,7 @@ def get_tagged_tokens(corpus=TAGGED):
     return tagged_spanned_tokens
 
 
+# [[((TOKEN, TAG), (START, END))]] -> [???]
 def get_all_training_features(tagged_tokens):
     """This takes tokenized, segmented, and tagged files and gets
     training features."""
@@ -309,16 +328,17 @@ def main():
 
 # this line will need to go when it's actually working.
     # tagged_tokens = [[token for (token,_) in sent]for sent in get_tagged_tokens(args.corpus)]
-    
+
     # print(tagged_tokens)
-    featuresets = get_all_training_features(get_tagged_tokens(args.corpus)
+    featuresets = get_all_training_features(get_tagged_tokens(args.corpus))
+    featuresets = [(fs, tag) for (fs, _, tag) in featuresets]
     random.shuffle(featuresets)
     test_set, training_set = get_sets(featuresets, args.ratio)
 
     classifiers = [
-        nltk.ConditionalExponentialClassifier,
-        nltk.DecisionTreeClassifier,
-        nltk.MaxentClassifier,
+        # nltk.ConditionalExponentialClassifier,
+        # nltk.DecisionTreeClassifier,
+        # nltk.MaxentClassifier,
         nltk.NaiveBayesClassifier,
         # nltk.PositiveNaiveBayesClassifier,
     ]
