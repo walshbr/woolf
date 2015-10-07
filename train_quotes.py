@@ -79,7 +79,8 @@ def tagged_token(token_span):
 
 
 def tokenize_corpus(corpus):
-    """Read the corpus a list sentences, each of which is a list of tokens and the spans in which they occur in the text."""
+    """Read the corpus a list sentences, each of which is a list of
+    tokens and the spans in which they occur in the text."""
     if os.path.isdir(corpus):
         corpus_dir = corpus
         corpus = [
@@ -87,14 +88,23 @@ def tokenize_corpus(corpus):
         ]
     else:
         corpus = [corpus]
+
+    tokenizer = nltk.load('tokenizers/punkt/{0}.pickle'.format('english'))
+
     for filename in corpus:
         with open(filename) as fin:
-            for sent in sent_tokenize(fin.read()):
-                sent_tokens = []
-                matches = list(re.finditer(r'\w+|[\'\"\/^/\,\-\:\.\;\?\!\(0-9]', sent))
-                for match in matches:
-                    sent_tokens.append((match.group(0), match.span()))
-                yield sent_tokens
+            data = fin.read()
+
+        for start, end in tokenizer.span_tokenize(data):
+            sent = data[start:end]
+            sent_tokens = []
+            matches = re.finditer(r'\w+|[\'\"\/^/\,\-\:\.\;\?\!\(0-9]', sent)
+            for match in matches:
+                mstart, mend = match.span()
+                sent_tokens.append(
+                    (match.group(0), (mstart+start, mend+start))
+                    )
+            yield sent_tokens
 
 
 def build_trainer(tagged_sents, default_tag='NN'):

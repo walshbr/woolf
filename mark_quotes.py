@@ -12,6 +12,7 @@ in it, based on the classifier."""
 
 
 import argparse
+from collections import deque
 import pickle
 import sys
 
@@ -36,16 +37,10 @@ def load_classifier(filename):
 
 
 def insert_quotes(classifier, fsets, sentence):
-    """Inserts ^ quotes wherever the classifier says they should be."""
-    # print(list(fsets))
-    # print(sentence)
-    # print("*****")
-    for ((token,_), span) in sentence:
-        yield token
-        for (feature, _span, _tag) in fsets:
-            if token == feature['token0'] and classifier.classify(feature):
-                yield "^"
-
+    """Identifies points in the input where quotes should be inserted."""
+    for (features, (_start, end), _) in fsets:
+        if classifier.classify(features):
+            yield end
 
 
 def parse_args(argv=None):
@@ -68,18 +63,36 @@ def main():
     args = parse_args()
     classifier = load_classifier(args.classifier)
 
+    tagged_tokens = [
+        sent for sent in train_quotes.get_tagged_tokens(args.input)
+    ]
+    quotes = []
+    for sentence in tagged_tokens:
+        quotes += insert_quotes(
+            classifier,
+            get_training_features(sentence),
+            sentence
+        )
+    quotes.reverse()
+
+    with open(args.input) as fin:
+        data = fin.read()
+
+    buf = deque()
+    prev = None
+    for i in quotes:
+        if prev is None:
+            slic = data[i:]
+        else:
+            slic = data[i:prev]
+
+        buf.appendleft(slic)
+        buf.appendleft("^")
+        prev = i
+    buf.appendleft(data[:prev])
 
     with open(args.output, 'w') as fout:
-        tagged_tokens = [sent for sent in train_quotes.get_tagged_tokens(args.input)]
-        for sentence in tagged_tokens:
-            tokens = [token for (token, _) in sentence]
-            spans = [span for (_, span) in sentence]
-            sent = insert_quotes(
-                classifier,
-                get_training_features(sentence),
-                sentence
-            )
-            fout.write(' '.join(sent) + '\n')
+        fout.write(''.join(buf))
 
 
 if __name__ == '__main__':
