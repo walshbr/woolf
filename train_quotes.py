@@ -258,7 +258,8 @@ def get_tagged_tokens(corpus=TAGGED, testing=False):
     if testing == True:
         tagger = build_trainer(brown.tagged_sents(categories='news'))
     else:
-        tagger = build_trainer(brown.tagged_sents())
+        # note that this will make the default tag DEFAULT for testing purposes in the interpreter. Need to specify the actual default tag of NN when ready to actually do it.
+        tagger = build_trainer(brown.tagged_sents(), "DEFAULT")
     tagged_spanned_tokens = []
     tokens_and_spans = tokenize_corpus(corpus)
     for sent in tokens_and_spans:
