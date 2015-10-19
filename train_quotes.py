@@ -102,12 +102,13 @@ def tokenize_corpus(corpus):
             yield sent_tokens
 
 
-def build_trainer(tagged_sents, default_tag='NN'):
+def build_trainer(tagged_sents, default_tag='DEFAULT'):
     """This builds a tagger from a corpus."""
     name_tagger = [nltk.DefaultTagger('PN').tag(names.words())]
-
+    punctuation_tags = [[('^', '^'), ('"', '"')]]
     tagger0 = nltk.DefaultTagger(default_tag)
-    tagger1 = nltk.UnigramTagger(tagged_sents, backoff=tagger0)
+    punctuation_tagger = nltk.UnigramTagger(punctuation_tags, backoff=tagger0)
+    tagger1 = nltk.UnigramTagger(tagged_sents, backoff=punctuation_tagger)
     tagger2 = nltk.BigramTagger(tagged_sents, backoff=tagger1)
     tagger3 = nltk.UnigramTagger(name_tagger, backoff=tagger2)
 
@@ -254,7 +255,7 @@ def cross_validate_means(accuracies):
 # FileName -> [[((TOKEN, TAG), (START, END))]]
 def get_tagged_tokens(corpus=TAGGED):
     """This tokenizes, segments, and tags all the files in a directory."""
-    tagger = build_trainer(brown.tagged_sents(categories='news'))
+    tagger = build_trainer(brown.tagged_sents())
     tagged_spanned_tokens = []
     tokens_and_spans = tokenize_corpus(corpus)
     for sent in tokens_and_spans:
@@ -374,3 +375,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
