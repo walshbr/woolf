@@ -253,9 +253,12 @@ def cross_validate_means(accuracies):
 
 
 # FileName -> [[((TOKEN, TAG), (START, END))]]
-def get_tagged_tokens(corpus=TAGGED):
+def get_tagged_tokens(corpus=TAGGED, testing=False):
     """This tokenizes, segments, and tags all the files in a directory."""
-    tagger = build_trainer(brown.tagged_sents())
+    if testing == True:
+        tagger = build_trainer(brown.tagged_sents(categories='news'))
+    else:
+        tagger = build_trainer(brown.tagged_sents())
     tagged_spanned_tokens = []
     tokens_and_spans = tokenize_corpus(corpus)
     for sent in tokens_and_spans:

@@ -31,7 +31,7 @@ def main():
     sets_of_tokens = [train_quotes.get_tagged_tokens(fn) for fn in corpus]
     defaults = [find_default(text) for text in sets_of_tokens]
     defaults = set([item for sublist in defaults for item in sublist])
-    print_out(defaults, "nouns.txt")
+    print_out(defaults, "defaults.txt")
 
 if __name__ == '__main__':
     main()
