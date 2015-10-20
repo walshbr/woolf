@@ -97,17 +97,32 @@ def tokenize_corpus(corpus):
             for match in matches:
                 mstart, mend = match.span()
                 sent_tokens.append(
-                    (match.group(0), (mstart+start, mend+start))
+                    (match.group(0).lower().replace('_',''), (mstart+start, mend+start))
                     )
             yield sent_tokens
 
 
 def build_trainer(tagged_sents, default_tag='DEFAULT'):
     """This builds a tagger from a corpus."""
-    name_tagger = [nltk.DefaultTagger('PN').tag(names.words())]
+    name_tagger = [nltk.DefaultTagger('PN').tag([name.lower() for name in names.words()])]
     punctuation_tags = [[('^', '^'), ('"', '"')]]
+    patterns = [
+                (r'.*ing$', 'VBG'),               # gerunds
+                (r'.*ed$', 'VBD'),                # simple past
+                (r'.*es$', 'VBZ'),                # 3rd singular present
+                (r'.*ould$', 'MD'),               # modals
+                (r'.*\'s$', 'NN$'),               # possessive nouns
+                (r'.*s$', 'NNS'),                 # plural nouns
+                (r'^-?[0-9]+(.[0-9]+)?$', 'CD'),  # cardinal numbers
+                (r'.*ly$', 'RB'),                       # adverbs
+                # comment out the following line to raise to the surface all the words being tagged by this last, default tag when you run debug.py.
+                (r'.*', 'NN')                     # nouns (default)
+                ]
+
+    # Right now, nothing will get to the default tagger, because the regex taggers last pattern essentially acts as a default tagger, tagging everything as NN.
     tagger0 = nltk.DefaultTagger(default_tag)
-    punctuation_tagger = nltk.UnigramTagger(punctuation_tags, backoff=tagger0)
+    regexp_tagger = nltk.RegexpTagger(patterns, backoff=tagger0)
+    punctuation_tagger = nltk.UnigramTagger(punctuation_tags, backoff=regexp_tagger)
     tagger1 = nltk.UnigramTagger(tagged_sents, backoff=punctuation_tagger)
     tagger2 = nltk.BigramTagger(tagged_sents, backoff=tagger1)
     tagger3 = nltk.UnigramTagger(name_tagger, backoff=tagger2)
@@ -256,10 +271,10 @@ def cross_validate_means(accuracies):
 def get_tagged_tokens(corpus=TAGGED, testing=False):
     """This tokenizes, segments, and tags all the files in a directory."""
     if testing == True:
+        # train against a smaller version of the corpus so that it doesn't take years during testing.
         tagger = build_trainer(brown.tagged_sents(categories='news'))
     else:
-        # note that this will make the default tag DEFAULT for testing purposes in the interpreter. Need to specify the actual default tag of NN when ready to actually do it.
-        tagger = build_trainer(brown.tagged_sents(), "DEFAULT")
+        tagger = build_trainer(brown.tagged_sents())
     tagged_spanned_tokens = []
     tokens_and_spans = tokenize_corpus(corpus)
     for sent in tokens_and_spans:

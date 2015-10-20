@@ -1,6 +1,8 @@
 import os
 import train_quotes
 
+"""Contains some standard debugging functions that I keep reusing. I tend to adapt them to whatever I'm currently working on. The current ones here are from when I was working on the POS tagger."""
+
 def find_default(tagged_sentences):
     """given a list of tagged sentences, return all those words that were tagged using the default tagger."""
     nouns = []
