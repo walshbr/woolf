@@ -18,8 +18,6 @@
 
 #B's to dos:
 
-# TODO: Refine the POS tagger so that it catches punctuation appropriately. It's catching a lot of it in the default tagger as NN right now.
-
 # TODO: Class for featureset, tag, and other processing (so we can
 # swap them out as a group together)
 
