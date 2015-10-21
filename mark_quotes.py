@@ -15,17 +15,7 @@ import pickle
 import sys
 
 import train_quotes
-
-
-def get_training_features(tokens):
-    """This wraps `get_training_features` from `train_quotes` with the
-    parameters used in training. This should probably be stored
-    somewhere."""
-    return train_quotes.get_training_features(
-        tokens,
-        is_target=train_quotes.is_word,
-        feature_history=2,
-    )
+from fset_manager import Current
 
 
 def load_classifier(filename):
@@ -61,14 +51,15 @@ def main():
     args = parse_args()
     classifier = load_classifier(args.classifier)
 
+    manager = Current(train_quotes.is_quote, train_quotes.is_word)
     tagged_tokens = [
-        sent for sent in train_quotes.get_tagged_tokens(args.input)
+        sent for sent in manager.get_tagged_tokens(args.input)
     ]
     quotes = []
     for sentence in tagged_tokens:
         quotes += insert_quotes(
             classifier,
-            get_training_features(sentence),
+            manager.get_training_features(sentence),
             sentence
         )
     quotes.reverse()
