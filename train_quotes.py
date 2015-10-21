@@ -16,10 +16,6 @@
 # TODO: Want to reproduce the histogram of quotation marks with the
 # "silent" quotes.
 
-#B's to dos:
-
-# TODO: Class for featureset, tag, and other processing (so we can
-# swap them out as a group together)
 
 import argparse
 from collections import deque, namedtuple
@@ -36,7 +32,6 @@ import re
 
 import nltk
 import nltk.corpus
-from nltk import sent_tokenize, wordpunct_tokenize
 from nltk.corpus import names
 from nltk.corpus import brown
 
@@ -47,7 +42,7 @@ TEST_SET_RATIO = 0.2
 
 FeatureContext = namedtuple('FeatureContext',
                             ['history', 'current', 'lookahead'])
-TaggedToken = namedtuple('TaggedToken',['token', 'tag', 'start', 'end'])
+TaggedToken = namedtuple('TaggedToken', ['token', 'tag', 'start', 'end'])
 
 first = operator.itemgetter(0)
 second = operator.itemgetter(1)
@@ -95,32 +90,41 @@ def tokenize_corpus(corpus):
             for match in matches:
                 mstart, mend = match.span()
                 sent_tokens.append(
-                    (match.group(0).lower().replace('_',''), (mstart+start, mend+start))
+                    (match.group(0).lower().replace('_', ''),
+                     (mstart+start, mend+start))
                     )
             yield sent_tokens
 
 
 def build_trainer(tagged_sents, default_tag='DEFAULT'):
     """This builds a tagger from a corpus."""
-    name_tagger = [nltk.DefaultTagger('PN').tag([name.lower() for name in names.words()])]
+    name_tagger = [
+        nltk.DefaultTagger('PN').tag([name.lower() for name in names.words()])
+    ]
     punctuation_tags = [[('^', '^'), ('"', '"')]]
     patterns = [
-                (r'.*ing$', 'VBG'),               # gerunds
-                (r'.*ed$', 'VBD'),                # simple past
-                (r'.*es$', 'VBZ'),                # 3rd singular present
-                (r'.*ould$', 'MD'),               # modals
-                (r'.*\'s$', 'NN$'),               # possessive nouns
-                (r'.*s$', 'NNS'),                 # plural nouns
-                (r'^-?[0-9]+(.[0-9]+)?$', 'CD'),  # cardinal numbers
-                (r'.*ly$', 'RB'),                       # adverbs
-                # comment out the following line to raise to the surface all the words being tagged by this last, default tag when you run debug.py.
-                (r'.*', 'NN')                     # nouns (default)
-                ]
+        (r'.*ing$', 'VBG'),               # gerunds
+        (r'.*ed$', 'VBD'),                # simple past
+        (r'.*es$', 'VBZ'),                # 3rd singular present
+        (r'.*ould$', 'MD'),               # modals
+        (r'.*\'s$', 'NN$'),               # possessive nouns
+        (r'.*s$', 'NNS'),                 # plural nouns
+        (r'^-?[0-9]+(.[0-9]+)?$', 'CD'),  # cardinal numbers
+        (r'.*ly$', 'RB'),                       # adverbs
+        # comment out the following line to raise to the surface all
+        # the words being tagged by this last, default tag when you
+        # run debug.py.
+        (r'.*', 'NN')                     # nouns (default)
+    ]
 
-    # Right now, nothing will get to the default tagger, because the regex taggers last pattern essentially acts as a default tagger, tagging everything as NN.
+    # Right now, nothing will get to the default tagger, because the
+    # regex taggers last pattern essentially acts as a default tagger,
+    # tagging everything as NN.
     tagger0 = nltk.DefaultTagger(default_tag)
     regexp_tagger = nltk.RegexpTagger(patterns, backoff=tagger0)
-    punctuation_tagger = nltk.UnigramTagger(punctuation_tags, backoff=regexp_tagger)
+    punctuation_tagger = nltk.UnigramTagger(
+        punctuation_tags, backoff=regexp_tagger
+    )
     tagger1 = nltk.UnigramTagger(tagged_sents, backoff=punctuation_tagger)
     tagger2 = nltk.BigramTagger(tagged_sents, backoff=tagger1)
     tagger3 = nltk.UnigramTagger(name_tagger, backoff=tagger2)
@@ -268,16 +272,17 @@ def cross_validate_means(accuracies):
 # FileName -> [[((TOKEN, TAG), (START, END))]]
 def get_tagged_tokens(corpus=TAGGED, testing=False):
     """This tokenizes, segments, and tags all the files in a directory."""
-    if testing == True:
-        # train against a smaller version of the corpus so that it doesn't take years during testing.
+    if testing:
+        # train against a smaller version of the corpus so that it
+        # doesn't take years during testing.
         tagger = build_trainer(brown.tagged_sents(categories='news'))
     else:
         tagger = build_trainer(brown.tagged_sents())
     tagged_spanned_tokens = []
     tokens_and_spans = tokenize_corpus(corpus)
     for sent in tokens_and_spans:
-        to_tag = [token for (token,_) in sent]
-        spans = [span for (_,span) in sent]
+        to_tag = [token for (token, _) in sent]
+        spans = [span for (_, span) in sent]
         sent_tagged_tokens = tagger.tag(to_tag)
         tagged_spanned_tokens.append(list(zip(sent_tagged_tokens, spans)))
     return tagged_spanned_tokens
@@ -349,10 +354,6 @@ def main():
     """The main function."""
     args = parse_args()
 
-# this line will need to go when it's actually working.
-    # tagged_tokens = [[token for (token,_) in sent]for sent in get_tagged_tokens(args.corpus)]
-
-    # print(tagged_tokens)
     featuresets = get_all_training_features(get_tagged_tokens(args.corpus))
     featuresets = [(fs, tag) for (fs, _, tag) in featuresets]
     random.shuffle(featuresets)
@@ -392,4 +393,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
