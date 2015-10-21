@@ -8,6 +8,8 @@ histograms/
 
 # debug files
 debug.txt
+debug.py
+defaults.txt
 
 # notes
 notes/
