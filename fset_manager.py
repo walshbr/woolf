@@ -211,7 +211,7 @@ class QuotePoint(AQuoteProcess):
         training_features = []
         for sent in tagged_tokens:
             training_features += self.get_training_features(
-                sent, is_target=self.is_target, feature_history=2,
+                sent
             )
         return training_features
 
