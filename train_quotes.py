@@ -183,11 +183,11 @@ def main():
     test_set, training_set = get_sets(featuresets, args.ratio)
 
     classifiers = [
-        # nltk.ConditionalExponentialClassifier,
-        # nltk.DecisionTreeClassifier,
-        # nltk.MaxentClassifier,
+        nltk.ConditionalExponentialClassifier,
+        nltk.DecisionTreeClassifier,
+        nltk.MaxentClassifier,
         nltk.NaiveBayesClassifier,
-        # nltk.PositiveNaiveBayesClassifier,
+        nltk.PositiveNaiveBayesClassifier,
     ]
     folds = itertools.chain.from_iterable(
         cross_validate_sets(cls, featuresets)
