@@ -1,0 +1,5 @@
+# commands to test the changes to train_quotes
+
+il.reload(train_quotes)
+manager = train_quotes.Current(train_quotes.is_quote, train_quotes.is_word)
+featuresets = manager.get_all_training_features(manager.get_tagged_tokens("corpus"))
