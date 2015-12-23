@@ -187,7 +187,7 @@ def main():
         nltk.DecisionTreeClassifier,
         nltk.MaxentClassifier,
         nltk.NaiveBayesClassifier,
-        nltk.PositiveNaiveBayesClassifier,
+        # nltk.PositiveNaiveBayesClassifier,
     ]
     folds = itertools.chain.from_iterable(
         cross_validate_sets(cls, featuresets)
