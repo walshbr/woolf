@@ -100,7 +100,7 @@ class AQuoteProcess:
             yield list(window)
 
     # FileName -> [[((TOKEN, TAG), (START, END))]]
-    def get_tagged_tokens(self, corpus=TAGGED, testing=False):
+    def get_tagged_tokens(self, corpus=TAGGED, testing=True):
         """This tokenizes, segments, and tags all the files in a directory."""
         if testing:
             # train against a smaller version of the corpus so that it
@@ -216,4 +216,67 @@ class QuotePoint(AQuoteProcess):
         return training_features
 
 
-Current = QuotePoint
+class InternalStyle(QuotePoint):
+    """ Assumes that we understand speech, at least in part, as a characteristic of the whole internal content of quotation marks. Rather than speech being signaled by a quotation mark and a quality of its immediately following words, it's a quality shared by all those words and marked by style in some way.""" 
+    # So I want the feature histories to be longer…but how much longer? Start with 10. Eric do I need to relist the .is_target and whatnot here if they haven't changed? I think that I do because it will only call down or overwrite methods in full. Is that right?
+    def __init__(self, is_context, is_target, history_size=5):
+        self.is_context = is_context
+        self.is_target = is_target
+        self.history_size = history_size
+
+    # def make_context(self, window):
+    #     return FeatureContext(
+    #         [tagged_token(t) for t in window[:-self.history_size]],
+    #         tagged_token(window[-2]),
+    #         tagged_token(window[-1]),
+    #     )
+
+    def get_features(self, context):
+        # the lookahead is not used right now. The history is. 
+        featureset = {
+            'token0': context.current[0],
+            'tag0': context.current[1],
+        }
+        history = reversed(list(context.history))
+        for (offset, (token, tag, _start, _end)) in enumerate(history):
+            featureset['token{}'.format(offset+1)] = token
+            featureset['tag{}'.format(offset+1)] = tag
+
+        return featureset
+
+    def get_tag(self, _features, context):
+        return self.is_context(context)
+
+    # [((TOKEN, TAG), (START, END))]
+    # -> [(FEATURES :: dict, SPAN :: (Int, Int), TAG :: Bool)]
+    def get_training_features(self, tagged_tokens):
+        window_size = self.history_size + 2
+        for window in self.windows(tagged_tokens, window_size):
+            # window :: [((TOKEN, TAG), (START, END))]
+            if len(window) < 2:
+                continue
+            # context :: FeatureContext
+            context = self.make_context(window)
+            if self.is_target(context):
+                # features :: dict
+                features = self.get_features(context)
+                # span :: (Int, Int)
+                span = (context.current.start, context.current.end)
+                # tag :: Bool
+                tag = self.get_tag(features, context)
+                yield (features, span, tag)
+
+    # [[((TOKEN, TAG), (START, END))]] -> [???]
+    # def get_all_training_features(self, tagged_tokens):
+    # Should all be the same.
+    #     """This takes tokenized, segmented, and tagged files and gets
+    #     training features."""
+    #     training_features = []
+    #     for sent in tagged_tokens:
+    #         training_features += self.get_training_features(
+    #             sent
+    #         )
+    #     return training_features
+
+
+Current = InternalStyle
