@@ -117,6 +117,9 @@ class AQuoteProcess:
             tagged_spanned_tokens.append(list(zip(sent_tagged_tokens, spans)))
         return tagged_spanned_tokens
 
+    # Override:
+    # This needs to call ps.find_quoted_quotes to divide up each file by quotes,
+    # then it can use `span_tokenizer` to identify the sentences.
     def tokenize_corpus(self, corpus):
         """Read the corpus a list sentences, each of which is a list of
         tokens and the spans in which they occur in the text."""
@@ -217,12 +220,10 @@ class QuotePoint(AQuoteProcess):
 
 
 class InternalStyle(QuotePoint):
-    """ Assumes that we understand speech, at least in part, as a characteristic of the whole internal content of quotation marks. Rather than speech being signaled by a quotation mark and a quality of its immediately following words, it's a quality shared by all those words and marked by style in some way.""" 
+    """ Assumes that we understand speech, at least in part, as a characteristic of the whole internal content of quotation marks. Rather than speech being signaled by a quotation mark and a quality of its immediately following words, it's a quality shared by all those words and marked by style in some way."""
     # So I want the feature histories to be longer…but how much longer? Start with 10. Eric do I need to relist the .is_target and whatnot here if they haven't changed? I think that I do because it will only call down or overwrite methods in full. Is that right?
     def __init__(self, is_context, is_target, history_size=5):
-        self.is_context = is_context
-        self.is_target = is_target
-        self.history_size = history_size
+        QuotePoint.__init__(self, is_context, is_target, history_size)
 
     # def make_context(self, window):
     #     return FeatureContext(
@@ -232,7 +233,7 @@ class InternalStyle(QuotePoint):
     #     )
 
     def get_features(self, context):
-        # the lookahead is not used right now. The history is. 
+        # the lookahead is not used right now. The history is.
         featureset = {
             'token0': context.current[0],
             'tag0': context.current[1],
