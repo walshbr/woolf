@@ -4,8 +4,6 @@
 """This takes a classifier and an input document and marks the quotes
 in it, based on the classifier."""
 
-# TODO: Don't strip out existing punctuation.
-
 # TODO: Only show new quotation marks.
 
 
