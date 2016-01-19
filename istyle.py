@@ -11,7 +11,7 @@ import re
 import sys
 
 import nltk
-from nltk.corpus import brown
+from nltk.corpus import brown, names
 
 from ps import all_files
 from train_quotes import get_sets
@@ -22,10 +22,12 @@ UNQUOTED = 0
 
 
 def count_quotation_marks(text):
+    """"counts the number of double quotation marks in a text"""
     return len(list(re.finditer(r'"', text)))
 
 
 def count_single_quotation_marks(text):
+    """counts number of single quotation marks in a text"""
     return len(list(re.finditer(r"'", text)))
 
 
