@@ -5,7 +5,6 @@
 usage: istyle.py INPUT_DIR
 """
 
-import os
 import random
 import re
 import sys
@@ -17,6 +16,7 @@ from nltk.corpus import brown, names
 
 from ps import all_files
 from train_quotes import get_sets
+import statistics
 
 
 QUOTED = 1
@@ -159,11 +159,9 @@ def cross_validate_means(accuracies):
         yield (cls, statistics.mean(x for (_, x) in accuracy))
 
 
-
-
 def main():
     if (len(sys.argv) < 2 or '-h' in sys.argv or '--help' in sys.argv or
-        'help' in sys.argv):
+            'help' in sys.argv):
         print(__doc__)
         sys.exit()
 
@@ -194,7 +192,7 @@ def main():
     ]
 
     folds = itertools.chain.from_iterable(
-        cross_validate_sets(cls, corpus) 
+        cross_validate_sets(cls, corpus)
         for cls in classifiers
     )
     with Pool() as pool:
