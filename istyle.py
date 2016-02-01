@@ -9,6 +9,8 @@ import os
 import random
 import re
 import sys
+import itertools
+from multiprocessing.pool import Pool
 
 import nltk
 from nltk.corpus import brown, names
@@ -103,6 +105,62 @@ def get_sentences(text, sent_tokenizer, tagger):
         yield list(zip(tags, pos))
 
 
+def cross_validate(cls, training_features, num_folds=10):
+    """Takes a set of classifier builder, training features, trains a
+    classifier based on it, and cross validates it against a specified
+    number of folds. Prints out the average accuracy for the
+    classifier across num_folds as well as the individual accuracies
+    for the subsections."""
+    print('Cross validating {}'.format(cls.__name__))
+    accuracies = []
+    subset_size = int(len(training_features) / num_folds)
+    for i in range(num_folds):
+
+        accuracy = 0
+        testing_this_round = training_features[i*subset_size:][:subset_size]
+        training_this_round = (training_features[:i*subset_size] +
+                               training_features[(i+1)*subset_size:])
+        classifier = cls.train(training_this_round)
+        accuracy = nltk.classify.accuracy(classifier, testing_this_round)
+        accuracies.append(accuracy)
+        print('Accuracy for fold {} = {}'.format(i, accuracy))
+
+    average = sum(accuracies) / num_folds
+
+    print('Cross-validated accuracy = {}'.format(average))
+    return average
+
+
+def cross_validate_sets(cls, training_features, num_folds=10):
+    """Takes a set of classifier builder, training features, trains a
+    classifier based on it, and cross validates it against a specified
+    number of folds. It yields the classifier class and accuracy."""
+    subset_size = int(len(training_features) / num_folds)
+    for i in range(num_folds):
+        testing_this_round = training_features[i*subset_size:][:subset_size]
+        training_this_round = (training_features[:i*subset_size] +
+                               training_features[(i+1)*subset_size:])
+        yield (cls, training_this_round, testing_this_round)
+
+
+def cross_validate_p(cls, training, test):
+    """This performs the cross-validation on one fold."""
+    classifier = cls.train(training)
+    accuracy = nltk.classify.accuracy(classifier, test)
+    return (cls, accuracy)
+
+
+def cross_validate_means(accuracies):
+    """This takes the means output from cross_validate_p, groups them
+    by class, and averages them. It yields the classes and averages."""
+    accuracies = list(accuracies)
+    accuracies.sort(key=lambda x: first(x).__name__)
+    for (cls, accuracy) in itertools.groupby(accuracies, first):
+        yield (cls, statistics.mean(x for (_, x) in accuracy))
+
+
+
+
 def main():
     if (len(sys.argv) < 2 or '-h' in sys.argv or '--help' in sys.argv or
         'help' in sys.argv):
@@ -120,7 +178,7 @@ def main():
             text = f.read()
         for (tag, chunk) in find_quoted_quotes(text):
             for sent in get_sentences(chunk, sent_tokens, tagger):
-                corpus.append((tag, sent))
+                corpus.append((sent, tag))
 
     # TODO: figure out how we want to handle the feature sets:
     # existence of words or tf-idf?
@@ -135,6 +193,14 @@ def main():
         # nltk.PositiveNaiveBayesClassifier,
     ]
 
+    folds = itertools.chain.from_iterable(
+        cross_validate_sets(cls, corpus) 
+        for cls in classifiers
+    )
+    with Pool() as pool:
+        means = list(cross_validate_means(
+            pool.starmap(cross_validate_p, folds, 3),
+        ))
     # TODO: pull in/modify cross_validate_sets
     # TODO: run x-validation in a pool
     # TODO: print out and output a la train_quotes
