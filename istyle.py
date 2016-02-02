@@ -148,6 +148,7 @@ def cross_validate_sets(cls, training_features, num_folds=10):
 
 def cross_validate_p(cls, training, test):
     """This performs the cross-validation on one fold."""
+    # print('TRAINING', training)
     classifier = cls.train(training)
     accuracy = nltk.classify.accuracy(classifier, test)
     return (cls, accuracy)
@@ -160,6 +161,11 @@ def cross_validate_means(accuracies):
     accuracies.sort(key=lambda x: first(x).__name__)
     for (cls, accuracy) in itertools.groupby(accuracies, first):
         yield (cls, statistics.mean(x for (_, x) in accuracy))
+
+
+def get_features(sent):
+    """Turn a sentence list into a frequency mapping."""
+    return nltk.FreqDist(tok for (tok, _pos) in sent)
 
 
 def main():
@@ -175,11 +181,11 @@ def main():
 
     print('reading corpus')
     for fn in all_files(corpus_dir):
-        with open(fn) as f:
+        with open(fn, encoding='latin1') as f:
             text = f.read()
         for (tag, chunk) in find_quoted_quotes(text):
             for sent in get_sentences(chunk, sent_tokens, tagger):
-                corpus.append((sent, tag))
+                corpus.append((get_features(sent), tag))
 
     # TODO: figure out how we want to handle the feature sets:
     # existence of words or tf-idf?
