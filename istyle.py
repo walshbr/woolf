@@ -17,10 +17,13 @@ from nltk.corpus import brown, names
 from ps import all_files
 from train_quotes import get_sets
 import statistics
-
+import operator
 
 QUOTED = 1
 UNQUOTED = 0
+
+first = operator.itemgetter(0)
+second = operator.itemgetter(1)
 
 
 def count_quotation_marks(text):
