@@ -41,15 +41,17 @@ first = operator.itemgetter(0)
 second = operator.itemgetter(1)
 
 
-def is_verb(context):
+def is_verb(token_tag):
     """This returns True if the tagged word is any form of verb, but
     it ignores the rest of the context (the second parameter)."""
-    return context.current.tag.startswith('VB')
+    _, tag = token_tag
+    return tag.startswith('VB')
 
 
-def is_quote(context):
+def is_quote(token_tag):
     """Is the tagged token a double-quote character?"""
-    return context.lookahead.token in {"''", "``", '"', "^"}
+    token, _ = token_tag
+    return token in {"''", "``", '"', "^"}
 
 
 def is_word(context):
@@ -174,7 +176,7 @@ def main():
     """The main function."""
     args = parse_args()
 
-    manager = Current(is_quote, is_word)
+    manager = Current(is_quote)
     featuresets = manager.get_all_training_features(
         manager.get_tagged_tokens(args.corpus)
     )

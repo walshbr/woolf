@@ -11,9 +11,9 @@ import re
 import sys
 import unicodedata
 
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-import matplotlib.path as path
+#  import matplotlib.pyplot as plt
+#  import matplotlib.patches as patches
+#  import matplotlib.path as path
 
 import numpy as np
 
@@ -95,6 +95,16 @@ def find_quoted_quotes(text):
         return list(re.finditer(r'(?<!\w)\'.+?\'(?!\w)', text))
     else:
         return list(re.finditer(r'"[^"]+"', text))
+
+
+def split_quoted_quotes(text):
+    """This partitions a text into quotes and non-quotes. Note: if the number
+    of quotation marks is less than fifty it assumes that single quotes are
+    used to designate dialogue."""
+    if count_quotation_marks(text) < count_single_quotation_marks(text):
+        return re.split(r'((?<!\w)\'.+?\'(?!\w))', text)
+    else:
+        return re.split(r'("[^"]+")', text)
 
 
 def create_location_histogram(corpus, bin_count=500):

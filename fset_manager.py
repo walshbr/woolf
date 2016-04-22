@@ -12,6 +12,8 @@ import re
 import nltk
 from nltk.corpus import brown, names
 
+import ps
+
 
 TAGGED = 'training_passages/tagged_text/'
 
@@ -219,11 +221,30 @@ class QuotePoint(AQuoteProcess):
         return training_features
 
 
-class InternalStyle(QuotePoint):
-    """ Assumes that we understand speech, at least in part, as a characteristic of the whole internal content of quotation marks. Rather than speech being signaled by a quotation mark and a quality of its immediately following words, it's a quality shared by all those words and marked by style in some way."""
-    # So I want the feature histories to be longer…but how much longer? Start with 10. Eric do I need to relist the .is_target and whatnot here if they haven't changed? I think that I do because it will only call down or overwrite methods in full. Is that right?
-    def __init__(self, is_context, is_target, history_size=5):
-        QuotePoint.__init__(self, is_context, is_target, history_size)
+class InternalStyle(AQuoteProcess):
+    """ Assumes that we understand speech, at least in part, as a
+    characteristic of the whole internal content of quotation marks. Rather
+    than speech being signaled by a quotation mark and a quality of its
+    immediately following words, it's a quality shared by all those words and
+    marked by style in some way.
+
+    The other processes defined in this file create `FeatureContext` objects.
+    This one won't.
+
+    Training tags are:
+
+        * 1 = quoted
+        * 0 = not-quoted
+
+    """
+
+    def __init__(self, is_quote):
+        self.is_quote = is_quote
+
+    # So I want the feature histories to be longer…but how much longer? Start
+    # with 10. Eric do I need to relist the .is_target and whatnot here if they
+    # haven't changed? I think that I do because it will only call down or
+    # overwrite methods in full. Is that right?
 
     # def make_context(self, window):
     #     return FeatureContext(
@@ -232,52 +253,62 @@ class InternalStyle(QuotePoint):
     #         tagged_token(window[-1]),
     #     )
 
-    def get_features(self, context):
-        # the lookahead is not used right now. The history is.
-        featureset = {
-            'token0': context.current[0],
-            'tag0': context.current[1],
-        }
-        history = reversed(list(context.history))
-        for (offset, (token, tag, _start, _end)) in enumerate(history):
-            featureset['token{}'.format(offset+1)] = token
-            featureset['tag{}'.format(offset+1)] = tag
+    # * Windows were based on a sliding window of N tokens.
+    # * Windows now are sentences.
+    # * Each window has one tag.
+    # * Each window creates one feature set, which will be the vector of
+    #   word/pos-tag in the sentence.
 
-        return featureset
+    # [[((TOKEN, TAG), (START, END))]]
+    # -> [(FEATURES :: (TOKEN/POS_TAG) -> Int, SPAN :: (Int, Int), TAG :: Bool)]
+    def get_all_training_features(self, tagged_tokens):
+        """This takes tokenized, segmented, and tagged files and gets
+        training features."""
+        features = []
 
-    def get_tag(self, _features, context):
-        return self.is_context(context)
+        for sent in tagged_tokens:
+            feature_set = {}
+            spans = []
+            tag = False
+            for (token_tag, span) in sent:
+                feature_set['{}/{}'.format(*token_tag)] = True
+                spans.append(span)
+                tag |= self.is_quote(token_tag)
+            features.append((feature_set, spans, tag))
 
-    # [((TOKEN, TAG), (START, END))]
-    # -> [(FEATURES :: dict, SPAN :: (Int, Int), TAG :: Bool)]
-    def get_training_features(self, tagged_tokens):
-        window_size = self.history_size + 2
-        for window in self.windows(tagged_tokens, window_size):
-            # window :: [((TOKEN, TAG), (START, END))]
-            if len(window) < 2:
-                continue
-            # context :: FeatureContext
-            context = self.make_context(window)
-            if self.is_target(context):
-                # features :: dict
-                features = self.get_features(context)
-                # span :: (Int, Int)
-                span = (context.current.start, context.current.end)
-                # tag :: Bool
-                tag = self.get_tag(features, context)
-                yield (features, span, tag)
+        return features
 
-    # [[((TOKEN, TAG), (START, END))]] -> [???]
-    # def get_all_training_features(self, tagged_tokens):
-    # Should all be the same.
-    #     """This takes tokenized, segmented, and tagged files and gets
-    #     training features."""
-    #     training_features = []
-    #     for sent in tagged_tokens:
-    #         training_features += self.get_training_features(
-    #             sent
-    #         )
-    #     return training_features
+    def tokenize_corpus(self, corpus):
+        """Read the corpus a list sentences, each of which is a list of
+        tokens and the spans in which they occur in the text."""
+        if os.path.isdir(corpus):
+            corpus_dir = corpus
+            corpus = [
+                os.path.join(corpus_dir, fn) for fn in os.listdir(corpus_dir)
+            ]
+        else:
+            corpus = [corpus]
+
+        tokenizer = nltk.load('tokenizers/punkt/{0}.pickle'.format('english'))
+
+        for filename in corpus:
+            with open(filename) as fin:
+                data = fin.read()
+
+            for span in ps.split_quoted_quotes(data):
+                for start, end in tokenizer.span_tokenize(span):
+                    sent = span[start:end]
+                    sent_tokens = []
+                    matches = re.finditer(
+                        r'\w+|[\'\"\/^/\,\-\:\.\;\?\!\(0-9]', sent
+                    )
+                    for match in matches:
+                        mstart, mend = match.span()
+                        sent_tokens.append(
+                            (match.group(0).lower().replace('_', ''),
+                             (mstart+start, mend+start))
+                        )
+                    yield sent_tokens
 
 
 Current = InternalStyle
