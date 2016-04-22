@@ -1,4 +1,5 @@
 # Virtual ENV files
+.DS_Store
 
 bin/
 man/
