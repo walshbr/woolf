@@ -9,11 +9,15 @@ import random
 import re
 import sys
 import itertools
+import argparse
 from multiprocessing.pool import Pool
 
 import nltk
 from nltk.corpus import brown, names
 
+import pickle
+import csv
+import os
 from ps import all_files
 from train_quotes import get_sets
 import statistics
@@ -21,6 +25,9 @@ import operator
 
 QUOTED = 1
 UNQUOTED = 0
+CORPUS = 'corpus'
+
+TEST_SET_RATIO = 0.2
 
 first = operator.itemgetter(0)
 second = operator.itemgetter(1)
@@ -163,18 +170,56 @@ def cross_validate_means(accuracies):
         yield (cls, statistics.mean(x for (_, x) in accuracy))
 
 
+def report_classifier(cls, accuracy, training, test, featureset, outdir):
+    """This reports on a classifier, comparing it to a baseline, and
+    pickling it into a directory."""
+    name = cls.__name__
+    output = os.path.join(outdir, name + '.pickle')
+    baseline = get_baseline(cls, training, test, False)
+    classifier = cls.train(featureset)
+    with open(output, 'wb') as fout:
+        pickle.dump(classifier, fout)
+    return (output, accuracy, baseline)
+
+
+def get_baseline(cls, training, test, base_value):
+    """This returns the accuracy for a baseline training, i.e.,
+    training based on everything being `base_value`."""
+    baseline = [(fs, base_value) for (fs, _) in training]
+    classifier = cls.train(baseline)
+    return nltk.classify.accuracy(classifier, test)
+
+
 def get_features(sent):
     """Turn a sentence list into a frequency mapping."""
     return nltk.FreqDist(tok for (tok, _pos) in sent)
 
 
-def main():
-    if (len(sys.argv) < 2 or '-h' in sys.argv or '--help' in sys.argv or
-            'help' in sys.argv):
-        print(__doc__)
-        sys.exit()
+def parse_args(argv=None):
+    """This parses the command line."""
+    argv = sys.argv[1:] if argv is None else argv
+    parser = argparse.ArgumentParser(description=__doc__)
 
-    corpus_dir = sys.argv[1]
+    parser.add_argument('-c', '--corpus', dest='corpus', action='store',
+                        default=CORPUS,
+                        help='The input directory containing the training '
+                             'corpus. Default = {}.'.format(CORPUS))
+    parser.add_argument('-r', '--ratio', dest='ratio', type=float,
+                        default=TEST_SET_RATIO,
+                        help='The ratio of documents to use as a test set. '
+                        'Default = {}'.format(TEST_SET_RATIO))
+    parser.add_argument('-o', '--output-dir', dest='output_dir',
+                        action='store', default='classifiers',
+                        help='The directory to write the pickled classifiers '
+                             'to. Default = ./classifiers/.')
+
+    return parser.parse_args(argv)
+
+
+def main():
+    args = parse_args()
+
+    corpus_dir = args.corpus
     sent_tokens = nltk.load('tokenizers/punkt/{0}.pickle'.format('english'))
     tagger = build_trainer(brown.tagged_sents())
     corpus = []
@@ -191,11 +236,11 @@ def main():
     # existence of words or tf-idf?
 
     random.shuffle(corpus)
-    test_set, training_set = get_sets(corpus, 0.2)
+    test_set, training_set = get_sets(corpus, args.ratio)
     classifiers = [
-        nltk.ConditionalExponentialClassifier,
-        nltk.DecisionTreeClassifier,
-        nltk.MaxentClassifier,
+        # nltk.ConditionalExponentialClassifier,
+        # nltk.DecisionTreeClassifier,
+        # nltk.MaxentClassifier,
         nltk.NaiveBayesClassifier,
         # nltk.PositiveNaiveBayesClassifier,
     ]
@@ -208,11 +253,23 @@ def main():
         means = list(cross_validate_means(
             pool.starmap(cross_validate_p, folds, 3),
         ))
-    # TODO: pull in/modify cross_validate_sets
-    # TODO: run x-validation in a pool
-    # TODO: print out and output a la train_quotes
-    # TODO: take the output and re-run it on new documents
 
+        means.sort(key=second)
+
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir)
+
+    with open(os.path.join(args.output_dir, 'results.csv'), 'w') as fout:
+        writer = csv.writer(fout)
+        writer.writerow(('Output', 'Accuracy', 'Baseline'))
+        writer.writerows(
+            report_classifier(cls, a, training_set, test_set, corpus,
+                              args.output_dir)
+            for (cls, a) in means
+        )
+
+    # TODO: take the output and re-run it on new documents
+    # we throw away the positions. we want to hold onto the start and ends of the sentences somehow. put it in a separate file.
 
 if __name__ == '__main__':
     main()
