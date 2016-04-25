@@ -102,7 +102,7 @@ class AQuoteProcess:
             yield list(window)
 
     # FileName -> [[((TOKEN, TAG), (START, END))]]
-    def get_tagged_tokens(self, corpus=TAGGED, testing=True):
+    def get_tagged_tokens(self, corpus=TAGGED, testing=False):
         """This tokenizes, segments, and tags all the files in a directory."""
         if testing:
             # train against a smaller version of the corpus so that it
@@ -293,6 +293,7 @@ class InternalStyle(AQuoteProcess):
 
         for filename in corpus:
             with open(filename) as fin:
+                print(filename)
                 data = fin.read()
 
             for span in ps.split_quoted_quotes(data):
