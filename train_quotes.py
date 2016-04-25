@@ -175,7 +175,7 @@ def parse_args(argv=None):
 def main():
     """The main function."""
     args = parse_args()
-
+    print(args.corpus)
     manager = Current(is_quote)
     featuresets = manager.get_all_training_features(
         manager.get_tagged_tokens(args.corpus)

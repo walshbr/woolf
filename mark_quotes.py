@@ -46,14 +46,19 @@ def parse_args(argv=None):
 
 
 def main():
+    # parse arguments
     args = parse_args()
+    # loads classifier
     classifier = load_classifier(args.classifier)
-
+    # creates featureset manager based on the classifier
     manager = Current(train_quotes.is_quote, train_quotes.is_word)
+    # creates a list of sentences of tagged tokens.
     tagged_tokens = [
         sent for sent in manager.get_tagged_tokens(args.input)
     ]
     quotes = []
+
+    # before we could easily insert quotes. maybe not so now?
     for sentence in tagged_tokens:
         quotes += insert_quotes(
             classifier,
