@@ -22,11 +22,51 @@ def load_classifier(filename):
         return pickle.load(fin)
 
 
+# TODO: This interface should be changed. It should return whether or not the
+# feature set represents a quotation.
 def insert_quotes(classifier, fsets, sentence):
     """Identifies points in the input where quotes should be inserted."""
-    for (features, (_start, end), _) in fsets:
-        if classifier.classify(features):
-            yield end
+    for (features, span, _) in fsets:
+        yield (features, span, classifier.classify(features))
+
+
+def quote_output(classifier, manager, input_file, tagged_tokens, output_file):
+    """\
+    Classifies input sentences for quotes. This assumes that the classifier
+    identifies points in the input where quotation marks should be inserted.
+
+    In other words, we no longer use this.
+    """
+
+    quotes = []
+
+    # before we could easily insert quotes. maybe not so now?
+    for sentence in tagged_tokens:
+        quotes += insert_quotes(
+            classifier,
+            manager.get_training_features(sentence),
+            sentence
+        )
+    quotes.reverse()
+
+    with open(input_file) as fin:
+        data = fin.read()
+
+    buf = deque()
+    prev = None
+    for i in quotes:
+        if prev is None:
+            slic = data[i:]
+        else:
+            slic = data[i:prev]
+
+        buf.appendleft(slic)
+        buf.appendleft("^")
+        prev = i
+    buf.appendleft(data[:prev])
+
+    with open(output_file, 'w') as fout:
+        fout.write(''.join(buf))
 
 
 def parse_args(argv=None):
@@ -52,39 +92,24 @@ def main():
     classifier = load_classifier(args.classifier)
     # creates featureset manager based on the classifier
     manager = Current(train_quotes.is_quote, train_quotes.is_word)
-    # creates a list of sentences of tagged tokens.
-    tagged_tokens = [
-        sent for sent in manager.get_tagged_tokens(args.input)
-    ]
-    quotes = []
-
-    # before we could easily insert quotes. maybe not so now?
-    for sentence in tagged_tokens:
-        quotes += insert_quotes(
-            classifier,
-            manager.get_training_features(sentence),
-            sentence
-        )
-    quotes.reverse()
-
-    with open(args.input) as fin:
-        data = fin.read()
-
-    buf = deque()
-    prev = None
-    for i in quotes:
-        if prev is None:
-            slic = data[i:]
-        else:
-            slic = data[i:prev]
-
-        buf.appendleft(slic)
-        buf.appendleft("^")
-        prev = i
-    buf.appendleft(data[:prev])
 
     with open(args.output, 'w') as fout:
-        fout.write(''.join(buf))
+        with open(args.input) as fin:
+            data = find.read()
+
+        for sentence in manager.get_tagged_tokens(args.input):
+            quotes = insert_quotes(
+                classifier,
+                manager.get_training_features(sentence),
+                sentence
+            )
+
+            prev_quoted = False
+            for (_, span, quoted) in quotes:
+                if prev_quoted != quoted:
+                    fout.write('^')
+                    prev_quoted = quoted
+                fout.write(data[start:end])
 
 
 if __name__ == '__main__':

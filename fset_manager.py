@@ -238,8 +238,9 @@ class InternalStyle(AQuoteProcess):
 
     """
 
-    def __init__(self, is_quote):
+    def __init__(self, is_quote, is_word):
         self.is_quote = is_quote
+        self.is_word = is_word
 
     # So I want the feature histories to be longer…but how much longer? Start
     # with 10. Eric do I need to relist the .is_target and whatnot here if they
@@ -252,6 +253,25 @@ class InternalStyle(AQuoteProcess):
     #         tagged_token(window[-2]),
     #         tagged_token(window[-1]),
     #     )
+
+    def get_training_features(self, tagged_tokens, feature_history=0):
+        feature_set = {}
+        spans = []
+        tag = False
+
+        for (token_tag, span) in sent:
+            feature_set['{}/{}'.format(*token_tag)] = True
+            spans.append(span)
+
+            # TODO: This isn't right. It needs to also consider whether the
+            # previous sentences were quotes or not. If the previous one is a
+            # quotation, then this one should default to being a quotation also.
+            # Or if the previous sentence is a quotation and this one returns
+            # true for `is_quote`, then we need to mark the next one as not a
+            # quote.
+            tag |= self.is_quote(token_tag)
+
+        return (feature_set, spans, tag)
 
     # * Windows were based on a sliding window of N tokens.
     # * Windows now are sentences.
@@ -267,14 +287,7 @@ class InternalStyle(AQuoteProcess):
         features = []
 
         for sent in tagged_tokens:
-            feature_set = {}
-            spans = []
-            tag = False
-            for (token_tag, span) in sent:
-                feature_set['{}/{}'.format(*token_tag)] = True
-                spans.append(span)
-                tag |= self.is_quote(token_tag)
-            features.append((feature_set, spans, tag))
+            features.append(self.get_training_features(sent))
 
         return features
 
