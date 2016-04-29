@@ -259,7 +259,7 @@ class InternalStyle(AQuoteProcess):
         spans = []
         tag = False
 
-        for (token_tag, span) in sent:
+        for (token_tag, span) in tagged_tokens:
             feature_set['{}/{}'.format(*token_tag)] = True
             spans.append(span)
 

@@ -26,8 +26,8 @@ def load_classifier(filename):
 # feature set represents a quotation.
 def insert_quotes(classifier, fsets, sentence):
     """Identifies points in the input where quotes should be inserted."""
-    for (features, span, _) in fsets:
-        yield (features, span, classifier.classify(features))
+    (features, span, _) = fsets
+    yield (features, span, classifier.classify(features))
 
 
 def quote_output(classifier, manager, input_file, tagged_tokens, output_file):
@@ -95,7 +95,7 @@ def main():
 
     with open(args.output, 'w') as fout:
         with open(args.input) as fin:
-            data = find.read()
+            data = fin.read()
 
         for sentence in manager.get_tagged_tokens(args.input):
             quotes = insert_quotes(
@@ -105,7 +105,14 @@ def main():
             )
 
             prev_quoted = False
-            for (_, span, quoted) in quotes:
+            quotes = list(quotes)
+            print(quotes[0])
+            for (_, spans, quoted) in quotes:
+                if not spans:
+                    continue
+                    # TODO: MRS> DALLOWAY SAID SHE WOULD INFECTCING EVERYTHING
+                start = spans[0][0]
+                end = spans[-1][1]
                 if prev_quoted != quoted:
                     fout.write('^')
                     prev_quoted = quoted
