@@ -176,7 +176,7 @@ def main():
     """The main function."""
     args = parse_args()
     print(args.corpus)
-    manager = Current(is_quote)
+    manager = Current(is_quote, is_word)
     featuresets = manager.get_all_training_features(
         manager.get_tagged_tokens(args.corpus)
     )
@@ -185,9 +185,9 @@ def main():
     test_set, training_set = get_sets(featuresets, args.ratio)
 
     classifiers = [
-        nltk.ConditionalExponentialClassifier,
-        nltk.DecisionTreeClassifier,
-        nltk.MaxentClassifier,
+        # nltk.ConditionalExponentialClassifier,
+        # nltk.DecisionTreeClassifier,
+        # nltk.MaxentClassifier,
         nltk.NaiveBayesClassifier,
         # nltk.PositiveNaiveBayesClassifier,
     ]
