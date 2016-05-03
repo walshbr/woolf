@@ -309,6 +309,8 @@ class InternalStyle(AQuoteProcess):
                 print(filename)
                 data = fin.read()
 
+            segment_start = 0
+
             for span in ps.split_quoted_quotes(data):
                 for start, end in tokenizer.span_tokenize(span):
                     sent = span[start:end]
@@ -318,11 +320,13 @@ class InternalStyle(AQuoteProcess):
                     )
                     for match in matches:
                         mstart, mend = match.span()
+                        seg_start = start + segment_start
                         sent_tokens.append(
                             (match.group(0).lower().replace('_', ''),
-                             (mstart+start, mend+start))
+                             (mstart+seg_start, mend+seg_start))
                         )
                     yield sent_tokens
+                segment_start += end
 
 
 Current = InternalStyle

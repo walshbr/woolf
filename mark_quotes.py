@@ -117,6 +117,8 @@ def main():
                     fout.write('^')
                     prev_quoted = quoted
                 fout.write(data[start:end])
+                # print(quoted)
+                # print(start, end)
 
 
 if __name__ == '__main__':
