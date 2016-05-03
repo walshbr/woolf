@@ -260,6 +260,10 @@ class InternalStyle(AQuoteProcess):
         tag = False
 
         for (token_tag, span) in tagged_tokens:
+            tag |= self.is_quote(token_tag)
+            if self.is_quote(token_tag):
+                continue
+
             feature_set['{}/{}'.format(*token_tag)] = True
             spans.append(span)
 
@@ -269,7 +273,6 @@ class InternalStyle(AQuoteProcess):
             # Or if the previous sentence is a quotation and this one returns
             # true for `is_quote`, then we need to mark the next one as not a
             # quote.
-            tag |= self.is_quote(token_tag)
 
         return (feature_set, spans, tag)
 
