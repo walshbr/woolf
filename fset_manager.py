@@ -120,8 +120,8 @@ class AQuoteProcess:
         return tagged_spanned_tokens
 
     # Override:
-    # This needs to call ps.find_quoted_quotes to divide up each file by quotes,
-    # then it can use `span_tokenizer` to identify the sentences.
+    # This needs to call ps.find_quoted_quotes to divide up each file by
+    # quotes, then it can use `span_tokenizer` to identify the sentences.
     def tokenize_corpus(self, corpus):
         """Read the corpus a list sentences, each of which is a list of
         tokens and the spans in which they occur in the text."""
@@ -257,6 +257,9 @@ class InternalStyle(AQuoteProcess):
     def get_training_features(self, tagged_tokens, feature_history=0):
         feature_set = {}
         spans = []
+        # tag = any(
+        #     self.is_quote(token_tag) for (token_tag, _) in tagged_tokens
+        # )
         tag = False
 
         for (token_tag, span) in tagged_tokens:
@@ -269,10 +272,10 @@ class InternalStyle(AQuoteProcess):
 
             # TODO: This isn't right. It needs to also consider whether the
             # previous sentences were quotes or not. If the previous one is a
-            # quotation, then this one should default to being a quotation also.
-            # Or if the previous sentence is a quotation and this one returns
-            # true for `is_quote`, then we need to mark the next one as not a
-            # quote.
+            # quotation, then this one should default to being a quotation
+            # also. Or if the previous sentence is a quotation and this one
+            # returns true for `is_quote`, then we need to mark the next one as
+            # not a quote.
 
         return (feature_set, spans, tag)
 
@@ -283,7 +286,10 @@ class InternalStyle(AQuoteProcess):
     #   word/pos-tag in the sentence.
 
     # [[((TOKEN, TAG), (START, END))]]
-    # -> [(FEATURES :: (TOKEN/POS_TAG) -> Int, SPAN :: (Int, Int), TAG :: Bool)]
+    # -> [ (FEATURES :: (TOKEN/POS_TAG) -> Int
+    #    , SPAN :: (Int, Int)
+    #    , TAG :: Bool)
+    #    ]
     def get_all_training_features(self, tagged_tokens):
         """This takes tokenized, segmented, and tagged files and gets
         training features."""
@@ -333,3 +339,8 @@ class InternalStyle(AQuoteProcess):
 
 
 Current = InternalStyle
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testfile('fset_manager.md')
