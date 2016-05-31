@@ -29,6 +29,44 @@ def tagged_token(token_span):
     return TaggedToken(token, tag, start, end)
 
 
+def split_sentences(text, tokenizer=None, offset=0):
+    """\
+    Splits text into lists of lists. Each list contains a sentence, which is a
+    list of normalized tokens, including the token's indexes in the original
+    text.
+
+    """
+
+    if tokenizer is None:
+        tokenizer = nltk.load('tokenizers/punkt/{0}.pickle'.format('english'))
+    for start, end in tokenizer.span_tokenize(text):
+        sent = text[start:end]
+        sent_tokens = []
+        matches = re.finditer(
+            r'\w+|[\'\"\/^/\,\-\:\.\;\?\!\(0-9]', sent
+        )
+        for match in matches:
+            mstart, mend = match.span()
+            seg_start = start + offset
+            sent_tokens.append(
+                (match.group(0).lower().replace('_', ''),
+                 (mstart+seg_start, mend+seg_start))
+            )
+        yield sent_tokens
+
+
+# TODO: Change so `text` is POS-tagged.
+def tag_quotes(text, is_quote):
+    """\
+    Takes a list of sentence tokens (lists of pairs of tokens and span indexes)
+    and returns each sentence in a tuple pair with whether it is currently in a
+    quote or not.
+
+    """
+
+    return [(s, False) for s in text]
+
+
 class AQuoteProcess:
 
     def make_context(self, window):
@@ -321,21 +359,10 @@ class InternalStyle(AQuoteProcess):
             segment_start = 0
 
             for span in ps.split_quoted_quotes(data):
-                for start, end in tokenizer.span_tokenize(span):
-                    sent = span[start:end]
-                    sent_tokens = []
-                    matches = re.finditer(
-                        r'\w+|[\'\"\/^/\,\-\:\.\;\?\!\(0-9]', sent
-                    )
-                    for match in matches:
-                        mstart, mend = match.span()
-                        seg_start = start + segment_start
-                        sent_tokens.append(
-                            (match.group(0).lower().replace('_', ''),
-                             (mstart+seg_start, mend+seg_start))
-                        )
+                for sent_tokens in split_sentences(span, tokenizer,
+                                                   segment_start):
                     yield sent_tokens
-                segment_start += end
+                segment_start += len(span)
 
 
 Current = InternalStyle
