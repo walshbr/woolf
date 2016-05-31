@@ -35,17 +35,53 @@
 >>> sentences = []
 >>> for q in quotes:
 ...     sentences += fset_manager.split_sentences(q)
->>> sentences
-['\nPrefatory matter!', '\nHe said, ', '"This is the entirety of a quote."', '\nShe said, ', '"This is beginning a quote.', 'This is the middle of a quote.', 'This\nis the end of a quote."', '\nThis is expository verbiage.', '\nFinally!\n']
+>>> for s in sentences:
+...     print(' '.join(token for (token, _) in s))
+prefatory matter !
+he said ,
+" this is the entirety of a quote . "
+she said ,
+" this is beginning a quote .
+this is the middle of a quote .
+this is the end of a quote . "
+this is expository verbiage .
+finally !
 
 ```
 
 ## Tags quote states
 
+**TODO**: `sentences` in this example needs to be POS-tagged.
+
 ```python
 
->>> fset_manager.tag_quotes(sentences, train_quotes.is_quote)
-[('\nPrefatory matter!', False), ('\nHe said, ', False), ('"This is the entirety of a quote."', True), ('\nShe said, ', False), ('"This is beginning a quote.', True), ('This is the middle of a quote.', True), ('This\nis the end of a quote."', True), ('\nThis is expository verbiage.', False), ('\nFinally!\n', False)]
+>>> pos_s = []
+>>> for s in sentences:
+...     pos_s.append([((token, '0'), tag) for (token, tag) in s])
+>>> sentences = pos_s
+>>> tagged = fset_manager.tag_quotes(sentences, train_quotes.is_quote)
+>>> for (s, tag) in tagged:
+...     print((' '.join(token for ((token, _), _) in s), tag))
+('prefatory matter !', False)
+('he said ,', False)
+('" this is the entirety of a quote . "', True)
+('she said ,', False)
+('" this is beginning a quote .', True)
+('this is the middle of a quote .', True)
+('this is the end of a quote . "', True)
+('this is expository verbiage .', False)
+('finally !', False)
 
 ```
 
+## Create Feature Sets from Sentences
+
+```python
+
+>>> features = [(fset_manager.make_feature_set(s), t) for (s, t) in tagged]
+>>> [f for (f, _) in features]
+[{'prefatory': 1, 'matter': 1, '!': 1}, {'he': 1, 'said': 1, ',': 1}, {'this': 1, 'is': 1, 'the': 1, 'entirety': 1, 'of': 1, 'a': 1, 'quote': 1, '.': 1}, {'she': 1, 'said': 1, ',': 1}, {'this': 1, 'is': 1, 'beginning': 1, 'a': 1, 'quote': 1, '.': 1}, {'this': 1, 'is': 1, 'the': 1, 'middle': 1, 'of': 1, 'a': 1, 'quote': 1, '.': 1}, {'this': 1, 'is': 1, 'the': 1, 'end': 1, 'of': 1, 'a': 1, 'quote': 1, '.': 1}, {'this': 1, 'is': 1, 'expsitory': 1, 'verbiage': 1, '.': 1}, {'finally': 1, '!': 1}]
+
+```
+
+**TODO**: Take POS tagging into account (needs to be passed into `tag_quotes`).
