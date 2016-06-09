@@ -79,10 +79,13 @@ finally !
 ```python
 
 >>> manager = fset_manager.Current(train_quotes.is_quote, train_quotes.is_word)
->>> features = [(manager.get_training_features(s), t) for (s, t) in tagged]
->>> [f for (f, _) in features]
+>>> features = [manager.get_training_features(s) for (s, t) in tagged]
+>>> print(tagged)
+>>> print(features)
+>>> [f for (f, _, _) in features]
 [{'prefatory': 1, 'matter': 1, '!': 1}, {'he': 1, 'said': 1, ',': 1}, {'this': 1, 'is': 1, 'the': 1, 'entirety': 1, 'of': 1, 'a': 1, 'quote': 1, '.': 1}, {'she': 1, 'said': 1, ',': 1}, {'this': 1, 'is': 1, 'beginning': 1, 'a': 1, 'quote': 1, '.': 1}, {'this': 1, 'is': 1, 'the': 1, 'middle': 1, 'of': 1, 'a': 1, 'quote': 1, '.': 1}, {'this': 1, 'is': 1, 'the': 1, 'end': 1, 'of': 1, 'a': 1, 'quote': 1, '.': 1}, {'this': 1, 'is': 1, 'expsitory': 1, 'verbiage': 1, '.': 1}, {'finally': 1, '!': 1}]
 
 ```
 
+**Before this seemed to be adding an extra tuple onto things - do we really need the tag twice? changed from [(manager.get_training_features(s), t) for (s, t) in tagged]**
 **TODO**: Take POS tagging into account (needs to be passed into `tag_quotes`).
