@@ -56,7 +56,7 @@ finally !
 >>> from nltk.corpus import brown
 >>> tagger = fset_manager.build_trainer(brown.tagged_sents())
 >>> sentences = fset_manager.tag_token_spans(sentences, tagger)
->>> tagged = fset_manager.tag_quotes(sentences, train_quotes.is_quote)
+>>> tagged = list(fset_manager.tag_quotes(sentences, train_quotes.is_quote))
 >>> for (s, tag) in tagged:
 ...     print((' '.join(token for ((token, _), _) in s), tag))
 ('prefatory matter !', False)
