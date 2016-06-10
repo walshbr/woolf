@@ -55,6 +55,58 @@ def split_sentences(text, tokenizer=None, offset=0):
         yield sent_tokens
 
 
+def tag_token_spans(sentences, tagger):
+    """\
+    This uses tagger to split apart tokens (token, span) and returns ((token,
+    tag), span). Each sentence is a list of these tokens.
+    """
+    tagged_sents = []
+    for sent in sentences:
+        to_tag = [token for (token, _) in sent]
+        spans = [span for (_, span) in sent]
+        tagged = tagger.tag(to_tag)
+        tagged_sents.append(list(zip(tagged, spans)))
+    return tagged_sents
+
+
+def build_trainer(tagged_sents, default_tag='DEFAULT'):
+    """Return a trained POS tagger."""
+    name_tagger = [
+        nltk.DefaultTagger('PN').tag([
+            name.lower() for name in names.words()
+        ])
+    ]
+    punctuation_tags = [[('^', '^'), ('"', '"')]]
+    patterns = [
+        (r'.*ing$', 'VBG'),               # gerunds
+        (r'.*ed$', 'VBD'),                # simple past
+        (r'.*es$', 'VBZ'),                # 3rd singular present
+        (r'.*ould$', 'MD'),               # modals
+        (r'.*\'s$', 'NN$'),               # possessive nouns
+        (r'.*s$', 'NNS'),                 # plural nouns
+        (r'^-?[0-9]+(.[0-9]+)?$', 'CD'),  # cardinal numbers
+        (r'.*ly$', 'RB'),                       # adverbs
+        # comment out the following line to raise to the surface all
+        # the words being tagged by this last, default tag when you
+        # run debug.py.
+        (r'.*', 'NN')                     # nouns (default)
+    ]
+
+    # Right now, nothing will get to the default tagger, because the
+    # regex taggers last pattern essentially acts as a default tagger,
+    # tagging everything as NN.
+    tagger0 = nltk.DefaultTagger(default_tag)
+    regexp_tagger = nltk.RegexpTagger(patterns, backoff=tagger0)
+    punctuation_tagger = nltk.UnigramTagger(
+        punctuation_tags, backoff=regexp_tagger
+    )
+    tagger1 = nltk.UnigramTagger(tagged_sents, backoff=punctuation_tagger)
+    tagger2 = nltk.BigramTagger(tagged_sents, backoff=tagger1)
+    tagger3 = nltk.UnigramTagger(name_tagger, backoff=tagger2)
+
+    return tagger3
+
+
 # TODO: Change so `text` is POS-tagged.
 def tag_quotes(text, is_quote):
     """\
@@ -95,40 +147,7 @@ class AQuoteProcess:
 
     def build_trainer(self, tagged_sents, default_tag='DEFAULT'):
         """This builds a tagger from a corpus."""
-        name_tagger = [
-            nltk.DefaultTagger('PN').tag([
-                name.lower() for name in names.words()
-            ])
-        ]
-        punctuation_tags = [[('^', '^'), ('"', '"')]]
-        patterns = [
-            (r'.*ing$', 'VBG'),               # gerunds
-            (r'.*ed$', 'VBD'),                # simple past
-            (r'.*es$', 'VBZ'),                # 3rd singular present
-            (r'.*ould$', 'MD'),               # modals
-            (r'.*\'s$', 'NN$'),               # possessive nouns
-            (r'.*s$', 'NNS'),                 # plural nouns
-            (r'^-?[0-9]+(.[0-9]+)?$', 'CD'),  # cardinal numbers
-            (r'.*ly$', 'RB'),                       # adverbs
-            # comment out the following line to raise to the surface all
-            # the words being tagged by this last, default tag when you
-            # run debug.py.
-            (r'.*', 'NN')                     # nouns (default)
-        ]
-
-        # Right now, nothing will get to the default tagger, because the
-        # regex taggers last pattern essentially acts as a default tagger,
-        # tagging everything as NN.
-        tagger0 = nltk.DefaultTagger(default_tag)
-        regexp_tagger = nltk.RegexpTagger(patterns, backoff=tagger0)
-        punctuation_tagger = nltk.UnigramTagger(
-            punctuation_tags, backoff=regexp_tagger
-        )
-        tagger1 = nltk.UnigramTagger(tagged_sents, backoff=punctuation_tagger)
-        tagger2 = nltk.BigramTagger(tagged_sents, backoff=tagger1)
-        tagger3 = nltk.UnigramTagger(name_tagger, backoff=tagger2)
-
-        return tagger3
+        return build_trainer(tagged_sents, default_tag)
 
     def windows(self, seq, window_size):
         """This iterates over window_size chunks of seq."""
@@ -145,16 +164,14 @@ class AQuoteProcess:
         if testing:
             # train against a smaller version of the corpus so that it
             # doesn't take years during testing.
-            tagger = self.build_trainer(brown.tagged_sents(categories='news'))
+            tagger = build_trainer(brown.tagged_sents(categories='news'))
         else:
-            tagger = self.build_trainer(brown.tagged_sents())
-        tagged_spanned_tokens = []
+            tagger = build_trainer(brown.tagged_sents())
         tokens_and_spans = self.tokenize_corpus(corpus)
-        for sent in tokens_and_spans:
-            to_tag = [token for (token, _) in sent]
-            spans = [span for (_, span) in sent]
-            sent_tagged_tokens = tagger.tag(to_tag)
-            tagged_spanned_tokens.append(list(zip(sent_tagged_tokens, spans)))
+        tagged_spanned_tokens = tag_token_spans(
+            tokens_and_spans,
+            tagger,
+        )
         return tagged_spanned_tokens
 
     # Override:
