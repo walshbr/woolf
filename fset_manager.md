@@ -51,14 +51,11 @@ finally !
 
 ## Tags quote states
 
-**TODO**: `sentences` in this example needs to be POS-tagged.
-
 ```python
 
->>> pos_s = []
->>> for s in sentences:
-...     pos_s.append([((token, '0'), tag) for (token, tag) in s])
->>> sentences = pos_s
+>>> from nltk.corpus import brown
+>>> tagger = fset_manager.build_trainer(brown.tagged_sents())
+>>> sentences = fset_manager.tag_token_spans(sentences, tagger)
 >>> tagged = fset_manager.tag_quotes(sentences, train_quotes.is_quote)
 >>> for (s, tag) in tagged:
 ...     print((' '.join(token for ((token, _), _) in s), tag))
@@ -80,11 +77,8 @@ finally !
 
 >>> manager = fset_manager.Current(train_quotes.is_quote, train_quotes.is_word)
 >>> features = [manager.get_training_features(s) for (s, t) in tagged]
->>> print(features[0][0])
->>> [f for (f, _, _) in features]
-[{'prefatory': 1, 'matter': 1, '!': 1}, {'he': 1, 'said': 1, ',': 1}, {'this': 1, 'is': 1, 'the': 1, 'entirety': 1, 'of': 1, 'a': 1, 'quote': 1, '.': 1}, {'she': 1, 'said': 1, ',': 1}, {'this': 1, 'is': 1, 'beginning': 1, 'a': 1, 'quote': 1, '.': 1}, {'this': 1, 'is': 1, 'the': 1, 'middle': 1, 'of': 1, 'a': 1, 'quote': 1, '.': 1}, {'this': 1, 'is': 1, 'the': 1, 'end': 1, 'of': 1, 'a': 1, 'quote': 1, '.': 1}, {'this': 1, 'is': 1, 'expsitory': 1, 'verbiage': 1, '.': 1}, {'finally': 1, '!': 1}]
+>>> [sorted(f.items()) for (f, _, _) in features]
+[[('!/.', True), ('matter/NN', True), ('prefatory/NN', True)], [(',/,', True), ('he/PPS', True), ('said/VBD', True)], [('./.', True), ('a/AT', True), ('entirety/NN', True), ('is/BEZ', True), ('of/IN', True), ('quote/NN', True), ('the/AT', True), ('this/DT', True)], [(',/,', True), ('said/VBD', True), ('she/PPS', True)], [('./.', True), ('a/AT', True), ('beginning/VBG', True), ('is/BEZ', True), ('quote/NN', True), ('this/DT', True)], [('./.', True), ('a/AT', True), ('is/BEZ', True), ('middle/NN', True), ('of/IN', True), ('quote/NN', True), ('the/AT', True), ('this/DT', True)], [('./.', True), ('a/AT', True), ('end/NN', True), ('is/BEZ', True), ('of/IN', True), ('quote/NN', True), ('the/AT', True), ('this/DT', True)], [('./.', True), ('expository/JJ', True), ('is/BEZ', True), ('this/DT', True), ('verbiage/NN', True)], [('!/.', True), ('finally/RB', True)]]
 
 ```
 
-**Before this seemed to be adding an extra tuple onto things - do we really need the tag twice? changed from [(manager.get_training_features(s), t) for (s, t) in tagged]**
-**TODO**: Take POS tagging into account (needs to be passed into `tag_quotes`).
