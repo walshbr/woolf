@@ -107,7 +107,6 @@ def build_trainer(tagged_sents, default_tag='DEFAULT'):
     return tagger3
 
 
-# TODO: Change so `text` is POS-tagged.
 def tag_quotes(text, is_quote):
     """\
     Takes a list of sentence tokens (lists of pairs of tokens and span indexes)
@@ -116,7 +115,16 @@ def tag_quotes(text, is_quote):
 
     """
 
-    return [(s, False) for s in text]
+    prev = False
+    for sentence in text:
+        quotes = [t for (t, _) in sentence if is_quote(t)]
+        if len(quotes) == 0:
+            yield (sentence, prev)
+        elif len(quotes) % 2 == 0:
+            yield (sentence, True)
+        else:
+            prev = not prev
+            yield (sentence, True)
 
 
 class AQuoteProcess:
