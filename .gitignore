@@ -80,3 +80,5 @@ docs/_build/
 target/
 
 problematic/
+corpus/
+marked_output/
