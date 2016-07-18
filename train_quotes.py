@@ -139,11 +139,21 @@ def get_baseline(cls, training, test, base_value):
     return nltk.classify.accuracy(classifier, test)
 
 
-def report_classifier(cls, accuracy, training, test, featureset, outdir):
+def report_classifier(cls, accuracy, training, test, featureset, outdir, corpus_dir):
     """This reports on a classifier, comparing it to a baseline, and
     pickling it into a directory."""
     name = cls.__name__
-    output = os.path.join(outdir, name + '.pickle')
+    if Current.__name__ == 'InternalStyle':
+        model = 'internal'
+    else:
+        model = 'external'
+
+    # if the appropriate nested folder structure doesn't exist, go ahead and make them so that you can load the classifiers into them.
+    if not os.path.exists(os.path.join(outdir, model)):
+        os.makedirs(os.path.join(outdir, model))
+    if not os.path.exists(os.path.join(outdir, model, corpus_dir)):
+        os.makedirs(os.path.join(outdir, model, corpus_dir))
+    output = os.path.join(outdir, model, corpus_dir, name + '.pickle')
     baseline = get_baseline(cls, training, test, False)
     classifier = cls.train(featureset)
     with open(output, 'wb') as fout:
@@ -186,9 +196,9 @@ def main():
 
     classifiers = [
         # nltk.ConditionalExponentialClassifier,
-        # nltk.DecisionTreeClassifier,
+        nltk.DecisionTreeClassifier,
         # nltk.MaxentClassifier,
-        nltk.NaiveBayesClassifier,
+        # nltk.NaiveBayesClassifier,
         # nltk.PositiveNaiveBayesClassifier,
     ]
     folds = itertools.chain.from_iterable(
@@ -210,7 +220,7 @@ def main():
         writer.writerow(('Output', 'Accuracy', 'Baseline'))
         writer.writerows(
             report_classifier(cls, a, training_set, test_set, featuresets,
-                              args.output_dir)
+                              args.output_dir, args.corpus)
             for (cls, a) in means
         )
 
