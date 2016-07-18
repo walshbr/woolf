@@ -14,7 +14,10 @@ import sys
 
 import train_quotes
 from fset_manager import Current
+import os
+import re
 
+CORPUS = 'corpus'
 
 def load_classifier(filename):
     """Loads the classifier from pickled into `filename`."""
@@ -85,6 +88,19 @@ def parse_args(argv=None):
     return parser.parse_args(argv)
 
 
+def all_files(corpus=CORPUS):
+    """given a corpus directory, make indexed text objects from it"""
+    texts = []
+    for (root, _, files) in os.walk(corpus):
+        for fn in files:
+            if fn[0] == '.':
+                pass
+            else:
+                path = os.path.join(root, fn)
+                texts.append(path)
+    return texts
+
+
 def main():
     # parse arguments
     args = parse_args()
@@ -93,32 +109,34 @@ def main():
     # creates featureset manager based on the classifier
     manager = Current(train_quotes.is_quote, train_quotes.is_word)
 
-    with open(args.output, 'w') as fout:
-        with open(args.input) as fin:
-            data = fin.read()
+    #Note: current usage will mark all texts in the given directory instead of one at a time. So you really only need to pass it a classifier.
 
-        for sentence in manager.get_tagged_tokens(args.input):
-            quotes = insert_quotes(
-                classifier,
-                manager.get_training_features(sentence),
-                sentence
-            )
+    if not os.path.exists('marked_output'):
+        os.makedirs('marked_output')
+    for input_fname in all_files():
+        with open('marked_output/' + re.sub(r'(^.*/)', '', input_fname), 'w') as fout:
+            with open(input_fname, 'r') as fin:
+                data = fin.read()
 
-            prev_quoted = False
-            quotes = list(quotes)
-            print(quotes[0])
-            for (_, spans, quoted) in quotes:
-                if not spans:
-                    continue
-                    # TODO: MRS> DALLOWAY SAID SHE WOULD INFECTCING EVERYTHING
-                start = spans[0][0]
-                end = spans[-1][1]
-                if prev_quoted != quoted:
-                    fout.write('^')
-                    prev_quoted = quoted
-                fout.write(data[start:end])
-                # print(quoted)
-                # print(start, end)
+            for sentence in manager.get_tagged_tokens(input_fname):
+                quotes = insert_quotes(
+                    classifier,
+                    manager.get_training_features(sentence),
+                    sentence
+                )
+
+                prev_quoted = False
+                quotes = list(quotes)
+                for (_, spans, quoted) in quotes:
+                    if not spans:
+                        continue
+                    start = spans[0][0]
+                    end = spans[-1][1]
+                    if prev_quoted != quoted:
+                        fout.write('^')
+                        prev_quoted = quoted
+                    fout.write(data[start:end])
+
 
 
 if __name__ == '__main__':
