@@ -151,6 +151,9 @@ def report_classifier(cls, accuracy, training, test, featureset, outdir, corpus_
     # if the appropriate nested folder structure doesn't exist, go ahead and make them so that you can load the classifiers into them.
     if not os.path.exists(os.path.join(outdir, model)):
         os.makedirs(os.path.join(outdir, model))
+
+    if corpus_dir == 'training_passages/tagged_text':
+        corpus_dir = 'tagged'
     if not os.path.exists(os.path.join(outdir, model, corpus_dir)):
         os.makedirs(os.path.join(outdir, model, corpus_dir))
     output = os.path.join(outdir, model, corpus_dir, name + '.pickle')
