@@ -392,7 +392,7 @@ class InternalStyle(AQuoteProcess):
 
 Current = InternalStyle
 
-
+# TODO: make it so that the things dump in a folder without you having to rename them in the code everytime. A folder with the marked texts and associated image would be good. and the path will have the classifier associated with it.
 if __name__ == '__main__':
     import doctest
     doctest.testfile('fset_manager.md')
