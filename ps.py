@@ -20,7 +20,7 @@ import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 
 
-CORPUS = 'marked_output_external_naive'
+CORPUS = 'marked_output/marked_corpus/internal/trained_on_tagged/DecisionTreeClassifier'
 
 
 def read_text(filename):
