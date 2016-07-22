@@ -11,16 +11,16 @@ import re
 import sys
 import unicodedata
 
-#  import matplotlib.pyplot as plt
-#  import matplotlib.patches as patches
-#  import matplotlib.path as path
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import matplotlib.path as path
 
 import numpy as np
 
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 
 
-CORPUS = 'corpus'
+CORPUS = 'marked_output_external_naive'
 
 
 def read_text(filename):
@@ -96,6 +96,13 @@ def find_quoted_quotes(text):
     else:
         return list(re.finditer(r'"[^"]+"', text))
 
+def find_carets(text):
+    """returns regex matches for the carets in the corpus."""
+    if count_quotation_marks(text) < count_single_quotation_marks(text):
+        return list(re.finditer(r'(?<!\w)\'.+?\'(?!\w)', text))
+    else:
+        return list(re.finditer(r'^', text))
+
 
 def split_quoted_quotes(text):
     """This partitions a text into quotes and non-quotes. Note: if the number
@@ -115,8 +122,10 @@ def create_location_histogram(corpus, bin_count=500):
     fig, axes = plt.subplots(len(corpus), 1, squeeze=True)
     fig.set_figheight(9.4)
     for (fn, ax) in zip(corpus, axes):
+        print(fn)
         text = clean_and_read_text(fn)
-        matches = find_quoted_quotes(text)
+        # matches = find_quoted_quotes(text)
+        matches = find_carets(text)
         locations = [m.start() for m in matches]
         n, bins = np.histogram(locations, bin_count)
 
@@ -147,7 +156,7 @@ def create_location_histogram(corpus, bin_count=500):
         # ax.set_ylabel('Number of Quotations')
 
     (base, _) = os.path.splitext(os.path.basename(fn))
-    output = os.path.join('output', base + '.png')
+    output = os.path.join(CORPUS, base + '.png')
     print('writing to {}'.format(output))
     plt.savefig(output, transparent=True)
     plt.show()
@@ -433,6 +442,7 @@ def main():
     # clean_and_read_text().
 
     files = list(all_files(CORPUS))
+    print(files)
     # # remove_short = lambda s: filter(lambda x: len(x) > 1, tokenize(s))
     # # vectorizer_report(
     # #     'Raw Frequencies', CountVectorizer, files, tokenizer=remove_short,
