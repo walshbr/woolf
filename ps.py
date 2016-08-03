@@ -118,33 +118,33 @@ def find_bin_counts(matches, bin_count):
         return locations, n, bins
 
 
-def create_location_histogram(corpus, unmarked_corpus, compare, bin_count=500):
+def create_location_histogram(marked_corpus, unmarked_corpus, token, bin_count=500):
     """\
     This takes the regex matches and produces a histogram of where they
     occurred in the document. Currently does this for all texts in the corpus
     """
 
     # subtract locations - Now that you have the counter object, where do you go from there. Is that the right way to subtract them?
-    fig, axes = plt.subplots(len(corpus), 1, squeeze=True)
+    fig, axes = plt.subplots(len(marked_corpus), 1, squeeze=True)
     fig.set_figheight(9.4)
-    for (fn, ax) in zip(corpus, axes):
-        unmarked_fn = re.sub('.*/', '', fn)
+    for (marked_fn, ax) in zip(marked_corpus, axes):
+        unmarked_fn = os.path.basename(marked_fn)
         unmarked_text = clean_and_read_text(UNMARKED_CORPUS + '/' +unmarked_fn)
-        text = clean_and_read_text(fn)
-        if compare == 'compare':
+        text = clean_and_read_text(marked_fn)
+        if token == 'compare':
             # assumes that you've passed a True, so you're trying to graph comparatively.
             locations, quote_n, bins = find_bin_counts(find_quoted_quotes(unmarked_text), bin_count)
             _, caret_n, _ = find_bin_counts(find_carets(text), bin_count)
             n = quote_n - caret_n
-        elif compare == 'caret':
-            print(fn)
+        elif token == 'caret':
+            print(marked_fn)
             print(UNMARKED_CORPUS)
             print(unmarked_fn)
             locations, n, bins = find_bin_counts(find_carets(text), bin_count)
         else:
             locations, n, bins = find_bin_counts(find_quoted_quotes(unmarked_text), bin_count)
 
-        # fig.suptitle(fn, fontsize=14, fontweight='bold')
+        # fig.suptitle(marked_fn, fontsize=14, fontweight='bold')
         left = np.array(bins[:-1])
         right = np.array(bins[1:])
         bottom = np.zeros(len(left))
@@ -170,12 +170,12 @@ def create_location_histogram(corpus, unmarked_corpus, compare, bin_count=500):
         # ax.set_xlabel('Position in Text, Measured by Character')
         # ax.set_ylabel('Number of Quotations')
 
-    (base, _) = os.path.splitext(os.path.basename(fn))
+    (base, _) = os.path.splitext(os.path.basename(marked_fn))
     output = os.path.join(CORPUS, base + '.png')
     print('writing to {}'.format(output))
-    plt.savefig('results_graphs/' + compare, transparent=True)
+    plt.savefig('results_graphs/' + token, transparent=True)
     plt.show()
-    print(compare)
+    print(token)
 
 
 def take_while(pred, input_str):
