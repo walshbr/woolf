@@ -17,11 +17,12 @@ import matplotlib.path as path
 
 import numpy as np
 
+from collections import Counter
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 
 
 CORPUS = 'marked_output/marked_corpus/internal/trained_on_tagged/DecisionTreeClassifier'
-
+UNMARKED_CORPUS = 'corpus'
 
 def read_text(filename):
     """Read in the text from the file; return a processed text."""
@@ -98,10 +99,7 @@ def find_quoted_quotes(text):
 
 def find_carets(text):
     """returns regex matches for the carets in the corpus."""
-    if count_quotation_marks(text) < count_single_quotation_marks(text):
-        return list(re.finditer(r'(?<!\w)\'.+?\'(?!\w)', text))
-    else:
-        return list(re.finditer(r'^', text))
+    return list(re.finditer(r'^', text))
 
 
 def split_quoted_quotes(text):
@@ -114,52 +112,67 @@ def split_quoted_quotes(text):
         return re.split(r'("[^"]+")', text)
 
 
-def create_location_histogram(corpus, bin_count=500):
+def create_location_histogram(corpus, unmarked_corpus, bin_count=500, compare=False):
     """\
     This takes the regex matches and produces a histogram of where they
     occurred in the document. Currently does this for all texts in the corpus
     """
+
+    # subtract locations - Now that you have the counter object, where do you go from there. Is that the right way to subtract them?
     fig, axes = plt.subplots(len(corpus), 1, squeeze=True)
     fig.set_figheight(9.4)
     for (fn, ax) in zip(corpus, axes):
         print(fn)
+        unmarked_fn = re.sub('.*/', '', fn)
+        unmarked_text = clean_and_read_text(UNMARKED_CORPUS + '/' +unmarked_fn)
         text = clean_and_read_text(fn)
-        # matches = find_quoted_quotes(text)
-        matches = find_carets(text)
-        locations = [m.start() for m in matches]
-        n, bins = np.histogram(locations, bin_count)
+        if compare:
+            # assumes that you've passed a True, so you're trying to graph comparatively.
+            quote_matches = find_quoted_quotes(unmarked_text)
+            caret_matches = find_carets(text)
+            quote_locations = [m.start() for m in quote_matches]
+            print(quote_locations)
+            caret_locations = [m.start() for m in caret_matches]
+            print(caret_locations)
+            difference = Counter(quote_locations) - Counter(caret_locations)
+            print(difference)
+        else:
+            matches = find_quoted_quotes(text)
+            locations = [m.start() for m in matches]
 
-        # fig.suptitle(fn, fontsize=14, fontweight='bold')
-        left = np.array(bins[:-1])
-        right = np.array(bins[1:])
-        bottom = np.zeros(len(left))
-        top = bottom + n
+    #     n, bins = np.histogram(locations, bin_count)
 
-        XY = np.array(
-            [[left, left, right, right], [bottom, top, top, bottom]]
-        ).T
+    #     # fig.suptitle(fn, fontsize=14, fontweight='bold')
+    #     left = np.array(bins[:-1])
+    #     right = np.array(bins[1:])
+    #     bottom = np.zeros(len(left))
+    #     top = bottom + n
 
-        barpath = path.Path.make_compound_path_from_polys(XY)
+    #     XY = np.array(
+    #         [[left, left, right, right], [bottom, top, top, bottom]]
+    #     ).T
 
-        patch = patches.PathPatch(
-            barpath, facecolor='blue', edgecolor='gray', alpha=0.8,
-            )
+    #     barpath = path.Path.make_compound_path_from_polys(XY)
 
-        ax.set_xlim(left[0], right[-1])
-        ax.set_ylim(bottom.min(), top.max())
-        ax.xaxis.set_visible(False)
-        ax.yaxis.set_visible(False)
-        # plt.axis('off')
-        ax.add_patch(patch)
+    #     patch = patches.PathPatch(
+    #         barpath, facecolor='blue', edgecolor='gray', alpha=0.8,
+    #         )
 
-        # ax.set_xlabel('Position in Text, Measured by Character')
-        # ax.set_ylabel('Number of Quotations')
+    #     ax.set_xlim(left[0], right[-1])
+    #     ax.set_ylim(bottom.min(), top.max())
+    #     ax.xaxis.set_visible(False)
+    #     ax.yaxis.set_visible(False)
+    #     # plt.axis('off')
+    #     ax.add_patch(patch)
 
-    (base, _) = os.path.splitext(os.path.basename(fn))
-    output = os.path.join(CORPUS, base + '.png')
-    print('writing to {}'.format(output))
-    plt.savefig(output, transparent=True)
-    plt.show()
+    #     # ax.set_xlabel('Position in Text, Measured by Character')
+    #     # ax.set_ylabel('Number of Quotations')
+
+    # (base, _) = os.path.splitext(os.path.basename(fn))
+    # output = os.path.join(CORPUS, base + '.png')
+    # print('writing to {}'.format(output))
+    # plt.savefig('results_graphs/output', transparent=True)
+    # plt.show()
 
 
 def take_while(pred, input_str):
@@ -441,8 +454,8 @@ def main():
     # NOTE: before any processing you have to clean the text using
     # clean_and_read_text().
 
-    files = list(all_files(CORPUS))
-    print(files)
+    marked_files = list(all_files(CORPUS)) 
+    unmarked_files = list(all_files(UNMARKED_CORPUS))
     # # remove_short = lambda s: filter(lambda x: len(x) > 1, tokenize(s))
     # # vectorizer_report(
     # #     'Raw Frequencies', CountVectorizer, files, tokenizer=remove_short,
@@ -450,7 +463,7 @@ def main():
     # # vectorizer_report('Tf-Idf', TfidfVectorizer, files,
     # #                   tokenizer=remove_short)
     # print_stats(files)
-    create_location_histogram(files)
+    create_location_histogram(marked_files, unmarked_files)
 
 if __name__ == '__main__':
     main()
