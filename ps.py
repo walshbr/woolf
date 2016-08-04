@@ -20,6 +20,17 @@ import numpy as np
 CORPUS_FOLDER = 'marked_output/marked_corpus/internal/trained_on_tagged/DecisionTreeClassifier'
 UNMARKED_CORPUS_FOLDER = 'corpus'
 
+def findall(haystack, needle):
+    i = 0
+    while True:
+        j = haystack.find(needle, i)
+        if j is -1:
+            break
+        yield j
+        i = j + 1
+
+list(findall('abcadeaafghijak', 'a'))
+# [0, 3, 6, 7, 13]
 
 def read_text(filename):
     """Read in the text from the file; return a processed text."""
@@ -159,10 +170,7 @@ def create_location_histogram(marked_corpus, unmarked_corpus,
         # fig.suptitle(marked_fn, fontsize=14, fontweight='bold')
         left = np.array(bins[:-1])
         right = np.array(bins[1:])
-        if token == 'compare':
-            bottom = np.full(len(left), n.min())
-        else:
-            bottom = np.zeros(len(left))
+        bottom = np.zeros(len(left))
         top = bottom + n
         XY = np.array(
             [[left, left, right, right], [bottom, top, top, bottom]]
