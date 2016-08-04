@@ -17,12 +17,9 @@ import matplotlib.path as path
 
 import numpy as np
 
-from collections import Counter
-from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+CORPUS_FOLDER = 'marked_output/marked_corpus/internal/trained_on_tagged/DecisionTreeClassifier'
+UNMARKED_CORPUS_FOLDER = 'corpus'
 
-
-CORPUS = 'marked_output/marked_corpus/internal/trained_on_tagged/DecisionTreeClassifier'
-UNMARKED_CORPUS = 'corpus'
 
 def read_text(filename):
     """Read in the text from the file; return a processed text."""
@@ -45,9 +42,11 @@ def quotations_check(text, file_name):
         print("%(file_name)s has an odd number of quotation marks." % locals())
         pause()
     elif count_quotation_marks(text) < 50:
-        print("%(file_name)s has a very low number of double quotation marks." % locals())
+        print("%(file_name)s has a very low number of double quotation marks."
+              % locals())
         count = count_single_quotation_marks(text)
-        print("%(file_name)s has %(count)s single quotation marks." % locals() %locals())
+        print("%(file_name)s has %(count)s single quotation marks."
+              % locals() % locals())
         pause()
     elif percent_quoted(text) > 30:
         print("%(file_name)s has a high percentage of quoted text." % locals())
@@ -97,9 +96,18 @@ def find_quoted_quotes(text):
     else:
         return list(re.finditer(r'"[^"]+"', text))
 
+
 def find_carets(text):
     """returns regex matches for the carets in the corpus."""
-    return list(re.finditer(r'^', text))
+    return list(re.finditer(r'\^', text))
+
+
+def find_quote_characters(text):
+    """returns matches for quote characters only."""
+    if count_quotation_marks(text) < count_single_quotation_marks(text):
+        return list(re.finditer(r'\'', text))
+    else:
+        return list(re.finditer(r'\"', text))
 
 
 def split_quoted_quotes(text):
@@ -118,38 +126,44 @@ def find_bin_counts(matches, bin_count):
         return locations, n, bins
 
 
-def create_location_histogram(marked_corpus, unmarked_corpus, token, bin_count=500):
+def create_location_histogram(marked_corpus, unmarked_corpus,
+                              token, bin_count=500):
     """\
     This takes the regex matches and produces a histogram of where they
     occurred in the document. Currently does this for all texts in the corpus
     """
-
-    # subtract locations - Now that you have the counter object, where do you go from there. Is that the right way to subtract them?
+    # subtract locations - Now that you have the
+    # counter object, where do you go from there.
+    # Is that the right way to subtract them?
     fig, axes = plt.subplots(len(marked_corpus), 1, squeeze=True)
     fig.set_figheight(9.4)
     for (marked_fn, ax) in zip(marked_corpus, axes):
         unmarked_fn = os.path.basename(marked_fn)
-        unmarked_text = clean_and_read_text(UNMARKED_CORPUS + '/' +unmarked_fn)
+        unmarked_text = clean_and_read_text(UNMARKED_CORPUS_FOLDER +
+                                            '/' + unmarked_fn)
         text = clean_and_read_text(marked_fn)
         if token == 'compare':
-            # assumes that you've passed a True, so you're trying to graph comparatively.
-            locations, quote_n, bins = find_bin_counts(find_quoted_quotes(unmarked_text), bin_count)
+            # assumes that you've passed a True, so you're
+            # trying to graph comparatively.
+            locations, quote_n, bins = find_bin_counts(
+                find_quote_characters(unmarked_text), bin_count)
             _, caret_n, _ = find_bin_counts(find_carets(text), bin_count)
             n = quote_n - caret_n
         elif token == 'caret':
-            print(marked_fn)
-            print(UNMARKED_CORPUS)
-            print(unmarked_fn)
+
             locations, n, bins = find_bin_counts(find_carets(text), bin_count)
         else:
-            locations, n, bins = find_bin_counts(find_quoted_quotes(unmarked_text), bin_count)
+            locations, n, bins = find_bin_counts(
+                find_quoted_quotes(unmarked_text), bin_count)
 
         # fig.suptitle(marked_fn, fontsize=14, fontweight='bold')
         left = np.array(bins[:-1])
         right = np.array(bins[1:])
-        bottom = np.zeros(len(left))
+        if token == 'compare':
+            bottom = np.full(len(left), n.min())
+        else:
+            bottom = np.zeros(len(left))
         top = bottom + n
-
         XY = np.array(
             [[left, left, right, right], [bottom, top, top, bottom]]
         ).T
@@ -158,9 +172,11 @@ def create_location_histogram(marked_corpus, unmarked_corpus, token, bin_count=5
 
         patch = patches.PathPatch(
             barpath, facecolor='blue', edgecolor='gray', alpha=0.8,
-            )
+        )
 
         ax.set_xlim(left[0], right[-1])
+        print(bottom.min())
+        print(top.max())
         ax.set_ylim(bottom.min(), top.max())
         ax.xaxis.set_visible(False)
         ax.yaxis.set_visible(False)
@@ -171,7 +187,7 @@ def create_location_histogram(marked_corpus, unmarked_corpus, token, bin_count=5
         # ax.set_ylabel('Number of Quotations')
 
     (base, _) = os.path.splitext(os.path.basename(marked_fn))
-    output = os.path.join(CORPUS, base + '.png')
+    output = os.path.join(CORPUS_FOLDER, base + '.png')
     print('writing to {}'.format(output))
     plt.savefig('results_graphs/' + token, transparent=True)
     plt.show()
@@ -214,7 +230,7 @@ def make_token_re():
             (?P<trash>  .     )
         '''.format(punct_chars, word_chars, number_chars),
         re.VERBOSE,
-        )
+    )
     return re_token
 
 
@@ -222,7 +238,7 @@ def tokenize(input_str, token_re=make_token_re()):
     """This returns an iterator over the tokens in the string."""
     return (
         m.group() for m in token_re.finditer(input_str) if not m.group('trash')
-        )
+    )
 
 
 class VectorSpace(object):
@@ -270,7 +286,7 @@ class VectorSpace(object):
             else:
                 raise Exception(
                     "Invalid index {} (len = {})".format(i, len(v)),
-                    )
+                )
         return np.array(v)
 
     def get(self, vector, key):
@@ -363,8 +379,8 @@ def average_sentence_length(text):
     including the quotation marks in its character count."""
     number_of_matches = len(matches)
     number_of_quoted_characters = calc_number_of_quotes(text)
-    average_quoted_sentence_length = (number_of_quoted_characters
-                                      / number_of_matches)
+    average_quoted_sentence_length = (
+        number_of_quoted_characters / number_of_matches)
     return average_quoted_sentence_length
 
 
@@ -429,7 +445,7 @@ def vectorizer_report(title, klass, filenames, **kwargs):
         'input': 'filename',
         'tokenizer': tokenize,
         'stop_words': 'english',
-        }
+    }
     params.update(kwargs)
     v = klass(**params)
     corpus = v.fit_transform(filenames)
@@ -457,8 +473,8 @@ def main():
     # NOTE: before any processing you have to clean the text using
     # clean_and_read_text().
 
-    marked_files = list(all_files(CORPUS)) 
-    unmarked_files = list(all_files(UNMARKED_CORPUS))
+    marked_files = list(all_files(CORPUS_FOLDER))
+    unmarked_files = list(all_files(UNMARKED_CORPUS_FOLDER))
     # # remove_short = lambda s: filter(lambda x: len(x) > 1, tokenize(s))
     # # vectorizer_report(
     # #     'Raw Frequencies', CountVectorizer, files, tokenizer=remove_short,
