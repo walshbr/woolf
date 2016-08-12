@@ -84,3 +84,5 @@ corpus/
 marked_output/
 .DS_Store/
 results_graphs/
+bokeh_graphs.zip
+bokeh_graphs/

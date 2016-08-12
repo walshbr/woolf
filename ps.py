@@ -23,18 +23,6 @@ import numpy as np
 CORPUS_FOLDER = 'marked_output/marked_corpus/internal/trained_on_tagged/DecisionTreeClassifier'
 UNMARKED_CORPUS_FOLDER = 'corpus'
 
-def findall(haystack, needle):
-    i = 0
-    while True:
-        j = haystack.find(needle, i)
-        if j is -1:
-            break
-        yield j
-        i = j + 1
-
-list(findall('abcadeaafghijak', 'a'))
-# [0, 3, 6, 7, 13]
-
 def read_text(filename):
     """Read in the text from the file; return a processed text."""
     with codecs.open(filename, 'r', 'utf8') as f:
@@ -181,28 +169,6 @@ def bokeh_play(marked_corpus, unmarked_corpus, token='compare', bin_count=400):
     p.xgrid.visible = False
     return p
 
-    # how is XY getting collapsed into a barpath and losing its negative values?
-    #     print(XY)
-    #     barpath = path.Path.make_compound_path_from_polys(XY)
-    #     patch = patches.PathPatch(
-    #         barpath, facecolor='blue', edgecolor='gray', alpha=0.8,
-    #     )
-
-    #     ax.set_xlim(left[0], right[-1])
-    #     ax.set_ylim(bottom.min(), top.max())
-    #     ax.xaxis.set_visible(False)
-    #     ax.yaxis.set_visible(False)
-    #     ax.add_patch(patch)
-
-    #     # ax.set_xlabel('Position in Text, Measured by Character')
-    #     # ax.set_ylabel('Number of Quotations')
-
-    # (base, _) = os.path.splitext(os.path.basename(marked_fn))
-    # output = os.path.join(CORPUS_FOLDER, base + '.png')
-    # print('writing to {}'.format(output))
-    # plt.savefig('results_graphs/' + token, transparent=True)
-    # plt.show()
-    # print(token)
 
 
 def create_location_histogram(marked_corpus, unmarked_corpus,
@@ -546,22 +512,26 @@ def concatenate_quotes(text):
     return concatenated_quotes
 
 
+def matplot_graph_all_three(marked_files, unmarked_files):
+    create_location_histogram(marked_files, unmarked_files, 'quote')
+    create_location_histogram(marked_files, unmarked_files, 'caret')
+    create_location_histogram(marked_files, unmarked_files, 'compare')
+
 def main():
     # NOTE: before any processing you have to clean the text using
     # clean_and_read_text().
     marked_files = list(all_files(CORPUS_FOLDER))
     unmarked_files = list(all_files(UNMARKED_CORPUS_FOLDER))
     # bokey_play = bokeh_play(marked_files, unmarked_files)
-    # # remove_short = lambda s: filter(lambda x: len(x) > 1, tokenize(s))
-    # # vectorizer_report(
-    # #     'Raw Frequencies', CountVectorizer, files, tokenizer=remove_short,
-    # #     )
-    # # vectorizer_report('Tf-Idf', TfidfVectorizer, files,
-    # #                   tokenizer=remove_short)
+    remove_short = lambda s: filter(lambda x: len(x) > 1, tokenize(s))
+    vectorizer_report(
+        'Raw Frequencies', CountVectorizer, files, tokenizer=remove_short,
+        )
+    vectorizer_report('Tf-Idf', TfidfVectorizer, files,
+                      tokenizer=remove_short)
     # print_stats(files)
-    create_location_histogram(marked_files, unmarked_files, 'quote')
-    create_location_histogram(marked_files, unmarked_files, 'caret')
-    create_location_histogram(marked_files, unmarked_files, 'compare')
+    matplot_graph_all_three(marked_files, unmarked_files)
+
 if __name__ == '__main__':
     main()
 
