@@ -82,3 +82,4 @@ target/
 problematic/
 corpus/
 marked_output/
+.DS_Store
