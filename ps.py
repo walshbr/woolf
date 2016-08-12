@@ -14,6 +14,9 @@ import unicodedata
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib.path as path
+import bokeh
+import pandas as pd
+from bokeh.charts import Bar, output_file, show
 
 import numpy as np
 
@@ -137,6 +140,71 @@ def find_bin_counts(matches, bin_count):
         return locations, n, bins
 
 
+def bokeh_play(marked_corpus, unmarked_corpus, token='compare', bin_count=400):
+    """\
+    This takes the regex matches and produces a histogram of where they
+    occurred in the document. Currently does this for all texts in the corpus
+    """
+    # subtract locations - Now that you have the
+    # counter object, where do you go from there.
+    # Is that the right way to subtract them?
+    marked_fn = marked_corpus[0]
+    unmarked_fn = os.path.basename(marked_fn)
+    unmarked_text = clean_and_read_text(UNMARKED_CORPUS_FOLDER +
+                                        '/' + unmarked_fn)
+    text = clean_and_read_text(marked_fn)
+    if token == 'compare':
+        # assumes that you've passed a True, so you're
+        # trying to graph comparatively.
+        locations, quote_n, bins = find_bin_counts(
+            find_quote_characters(unmarked_text), bin_count)
+        _, caret_n, _ = find_bin_counts(find_carets(text), bin_count)
+        n = quote_n - caret_n         
+    elif token == 'caret':
+        locations, n, bins = find_bin_counts(find_carets(text), bin_count)
+    else:
+        locations, n, bins = find_bin_counts(
+            find_quoted_quotes(unmarked_text), bin_count)
+
+
+    # # fig.suptitle(marked_fn, fontsize=14, fontweight='bold')
+    left = np.array(bins[:-1])
+    right = np.array(bins[1:])
+    bottom = np.zeros(len(left))
+    top = bottom + n
+    XY = np.array(
+        [[left, left, right, right], [bottom, top, top, bottom]]
+    ).T
+    d_frame = pd.DataFrame(n, columns=['count'])
+    p = bokeh.charts.Bar(d_frame, legend=False, plot_width=1200)
+    p.xaxis.visible = False
+    p.xgrid.visible = False
+    return p
+
+    # how is XY getting collapsed into a barpath and losing its negative values?
+    #     print(XY)
+    #     barpath = path.Path.make_compound_path_from_polys(XY)
+    #     patch = patches.PathPatch(
+    #         barpath, facecolor='blue', edgecolor='gray', alpha=0.8,
+    #     )
+
+    #     ax.set_xlim(left[0], right[-1])
+    #     ax.set_ylim(bottom.min(), top.max())
+    #     ax.xaxis.set_visible(False)
+    #     ax.yaxis.set_visible(False)
+    #     ax.add_patch(patch)
+
+    #     # ax.set_xlabel('Position in Text, Measured by Character')
+    #     # ax.set_ylabel('Number of Quotations')
+
+    # (base, _) = os.path.splitext(os.path.basename(marked_fn))
+    # output = os.path.join(CORPUS_FOLDER, base + '.png')
+    # print('writing to {}'.format(output))
+    # plt.savefig('results_graphs/' + token, transparent=True)
+    # plt.show()
+    # print(token)
+
+
 def create_location_histogram(marked_corpus, unmarked_corpus,
                               token, bin_count=500):
     """\
@@ -163,9 +231,11 @@ def create_location_histogram(marked_corpus, unmarked_corpus,
         elif token == 'caret':
 
             locations, n, bins = find_bin_counts(find_carets(text), bin_count)
+            
         else:
             locations, n, bins = find_bin_counts(
                 find_quoted_quotes(unmarked_text), bin_count)
+
 
         # fig.suptitle(marked_fn, fontsize=14, fontweight='bold')
         left = np.array(bins[:-1])
@@ -176,19 +246,18 @@ def create_location_histogram(marked_corpus, unmarked_corpus,
             [[left, left, right, right], [bottom, top, top, bottom]]
         ).T
 
+        # pip got broken
+        # how is XY getting collapsed into a barpath and losing its negative values?
+        print(XY)
         barpath = path.Path.make_compound_path_from_polys(XY)
-
         patch = patches.PathPatch(
             barpath, facecolor='blue', edgecolor='gray', alpha=0.8,
         )
 
         ax.set_xlim(left[0], right[-1])
-        print(bottom.min())
-        print(top.max())
         ax.set_ylim(bottom.min(), top.max())
         ax.xaxis.set_visible(False)
         ax.yaxis.set_visible(False)
-        # plt.axis('off')
         ax.add_patch(patch)
 
         # ax.set_xlabel('Position in Text, Measured by Character')
@@ -480,9 +549,9 @@ def concatenate_quotes(text):
 def main():
     # NOTE: before any processing you have to clean the text using
     # clean_and_read_text().
-
     marked_files = list(all_files(CORPUS_FOLDER))
     unmarked_files = list(all_files(UNMARKED_CORPUS_FOLDER))
+    # bokey_play = bokeh_play(marked_files, unmarked_files)
     # # remove_short = lambda s: filter(lambda x: len(x) > 1, tokenize(s))
     # # vectorizer_report(
     # #     'Raw Frequencies', CountVectorizer, files, tokenizer=remove_short,

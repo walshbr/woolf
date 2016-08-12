@@ -108,6 +108,7 @@ def cross_validate_sets(cls, training_features, num_folds=10):
 
 def cross_validate_p(cls, training, test):
     """This performs the cross-validation on one fold."""
+    print(cls)
     classifier = cls.train(training)
     accuracy = nltk.classify.accuracy(classifier, test)
     return (cls, accuracy)
@@ -164,7 +165,7 @@ def report_classifier(cls, accuracy, training, test, featureset, outdir, corpus_
     return (output, accuracy, baseline)
 
 
-def parse_args(argv=None):
+def parse_args(self, argv=None):
     """This parses the command line."""
     argv = sys.argv[1:] if argv is None else argv
     parser = argparse.ArgumentParser(description=__doc__)
