@@ -27,6 +27,7 @@ import pickle
 import random
 import statistics
 import sys
+import notification
 
 import nltk
 import nltk.corpus
@@ -201,8 +202,8 @@ def main():
     classifiers = [
         # nltk.ConditionalExponentialClassifier,
         nltk.DecisionTreeClassifier,
-        # nltk.MaxentClassifier,
-        # nltk.NaiveBayesClassifier,
+        nltk.MaxentClassifier,
+        nltk.NaiveBayesClassifier,
         # nltk.PositiveNaiveBayesClassifier,
     ]
     folds = itertools.chain.from_iterable(
@@ -229,6 +230,7 @@ def main():
         )
 
     # TODO: MOAR TRAINING!
+    notification.email_notification_on_completion()
 
 if __name__ == '__main__':
     main()
