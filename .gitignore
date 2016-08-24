@@ -82,5 +82,8 @@ target/
 problematic/
 corpus/
 marked_output/
-
 notification.py
+.DS_Store/
+results_graphs/
+bokeh_graphs.zip
+bokeh_graphs/
