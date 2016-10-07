@@ -81,9 +81,9 @@ def cross_validate(cls, training_features, num_folds=10):
     for i in range(num_folds):
 
         accuracy = 0
-        testing_this_round = training_features[i*subset_size:][:subset_size]
-        training_this_round = (training_features[:i*subset_size] +
-                               training_features[(i+1)*subset_size:])
+        testing_this_round = training_features[i * subset_size:][:subset_size]
+        training_this_round = (training_features[:i * subset_size] +
+                               training_features[(i + 1) * subset_size:])
         classifier = cls.train(training_this_round)
         accuracy = nltk.classify.accuracy(classifier, testing_this_round)
         accuracies.append(accuracy)
@@ -101,15 +101,15 @@ def cross_validate_sets(cls, training_features, num_folds=10):
     number of folds. It yields the classifier class and accuracy."""
     subset_size = int(len(training_features) / num_folds)
     for i in range(num_folds):
-        testing_this_round = training_features[i*subset_size:][:subset_size]
-        training_this_round = (training_features[:i*subset_size] +
-                               training_features[(i+1)*subset_size:])
+        testing_this_round = training_features[i * subset_size:][:subset_size]
+        training_this_round = (training_features[:i * subset_size] +
+                               training_features[(i + 1) * subset_size:])
         yield (cls, training_this_round, testing_this_round)
 
 
 def cross_validate_p(cls, training, test):
     """This performs the cross-validation on one fold."""
-    print(cls)
+    print("cross validating " + str(cls))
     classifier = cls.train(training)
     accuracy = nltk.classify.accuracy(classifier, test)
     return (cls, accuracy)
@@ -141,7 +141,8 @@ def get_baseline(cls, training, test, base_value):
     return nltk.classify.accuracy(classifier, test)
 
 
-def report_classifier(cls, accuracy, training, test, featureset, outdir, corpus_dir):
+def report_classifier(cls, accuracy, training, test,
+                      featureset, outdir, corpus_dir):
     """This reports on a classifier, comparing it to a baseline, and
     pickling it into a directory."""
     name = cls.__name__
@@ -150,11 +151,13 @@ def report_classifier(cls, accuracy, training, test, featureset, outdir, corpus_
     else:
         model = 'external'
 
-    # if the appropriate nested folder structure doesn't exist, go ahead and make them so that you can load the classifiers into them.
+    # if the appropriate nested folder structure doesn't exist,
+    # go ahead and make them so that you can load the
+    # classifiers into them.
     if not os.path.exists(os.path.join(outdir, model)):
         os.makedirs(os.path.join(outdir, model))
 
-    if corpus_dir == 'training_passages/tagged_text':
+    if corpus_dir == 'training_passages/tagged_text/':
         corpus_dir = 'tagged'
     if not os.path.exists(os.path.join(outdir, model, corpus_dir)):
         os.makedirs(os.path.join(outdir, model, corpus_dir))
@@ -166,7 +169,7 @@ def report_classifier(cls, accuracy, training, test, featureset, outdir, corpus_
     return (output, accuracy, baseline)
 
 
-def parse_args(self, argv=None):
+def parse_args(argv=None):
     """This parses the command line."""
     argv = sys.argv[1:] if argv is None else argv
     parser = argparse.ArgumentParser(description=__doc__)
@@ -188,7 +191,7 @@ def parse_args(self, argv=None):
 
 
 def main():
-    """The main function."""
+    # """The main function."""
     args = parse_args()
     print(args.corpus)
     manager = Current(is_quote, is_word)
@@ -202,8 +205,8 @@ def main():
     classifiers = [
         # nltk.ConditionalExponentialClassifier,
         nltk.DecisionTreeClassifier,
-        nltk.MaxentClassifier,
-        nltk.NaiveBayesClassifier,
+        # nltk.MaxentClassifier,
+        # nltk.NaiveBayesClassifier,
         # nltk.PositiveNaiveBayesClassifier,
     ]
     folds = itertools.chain.from_iterable(
@@ -219,17 +222,30 @@ def main():
 
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
-
-    with open(os.path.join(args.output_dir, 'results.csv'), 'w') as fout:
+    if Current.__name__ == 'InternalStyle':
+        model = 'internal'
+    else:
+        model = 'external'
+    if args.corpus == 'training_passages/tagged_text/':
+        corpus_dir = 'tagged'
+    else:
+        corpus_dir = args.corpus
+    if not os.path.isfile(os.path.join(args.output_dir, model, corpus_dir,
+                          'results.csv')):
+        with open(os.path.join(args.output_dir, model, corpus_dir,
+                  'results.csv'), 'w') as fout:
+            writer = csv.writer(fout)
+            writer.writerow(('Output', 'Accuracy', 'Baseline'))
+    with open(os.path.join(args.output_dir, model, corpus_dir,
+              'results.csv'), 'a') as fout:
         writer = csv.writer(fout)
-        writer.writerow(('Output', 'Accuracy', 'Baseline'))
         writer.writerows(
             report_classifier(cls, a, training_set, test_set, featuresets,
                               args.output_dir, args.corpus)
             for (cls, a) in means
         )
 
-    # TODO: MOAR TRAINING!
+    # # TODO: MOAR TRAINING!
     notification.email_notification_on_completion()
 
 if __name__ == '__main__':
