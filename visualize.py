@@ -114,7 +114,6 @@ def single_bokeh_graph(args, marked_fn, unmarked_corpus,
     else:
         locations, n, bins = find_bin_counts(
             find_quoted_quotes(unmarked_text), bin_count)
-
     d_frame = pd.DataFrame(n, columns=['count'])
     output_file('bokeh_graphs/' + re.sub(r'\.txt', '',
                 os.path.basename(marked_fn)) + '.html')
@@ -198,9 +197,13 @@ def main():
     # NOTE: before any processing you have to clean the text using
     # clean_and_read_text().
     args = parse_args()
+    test = re.sub(r'marked', '', os.path.basename(args.corpus_folder))
+    print(test)
+    print(args.corpus_folder)
+    print(args.unmarked_corpus_folder)
     marked_files = list(all_files(args.corpus_folder))
     unmarked_files = list(all_files(args.unmarked_corpus_folder))
-    bokeh_graph(args, marked_files, unmarked_files)
+    all_bokeh_graphs(args, marked_files, unmarked_files)
     # matplot_graph_all_three(args, marked_files, unmarked_files)
 
 if __name__ == '__main__':
