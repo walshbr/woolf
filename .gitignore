@@ -79,7 +79,9 @@ docs/_build/
 # PyBuilder
 target/
 
+training_passages/
 problematic/
+new_corpus/
 corpus/
 marked_output/
 notification.py
