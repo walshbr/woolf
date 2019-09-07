@@ -63,3 +63,11 @@ docs/_build/
 
 # PyBuilder
 target/
+
+classifiers/
+data_collections/
+defaults.txt
+notes/
+notification.py
+results.txt
+results/
