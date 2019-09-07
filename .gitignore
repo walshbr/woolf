@@ -1,4 +1,5 @@
 # Virtual ENV files
+.DS_Store
 
 bin/
 man/
@@ -8,6 +9,20 @@ histograms/
 
 # debug files
 debug.txt
+debug.py
+defaults.txt
+results.txt
+
+# notes
+notes/
+eric_notes.txt
+
+# results
+data_collections/
+results/
+mark_quotes_questions.py
+train_quotes_questions.py
+classifiers/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -64,10 +79,13 @@ docs/_build/
 # PyBuilder
 target/
 
-classifiers/
-data_collections/
-defaults.txt
-notes/
+training_passages/
+problematic/
+new_corpus/
+corpus/
+marked_output/
 notification.py
-results.txt
-results/
+.DS_Store/
+results_graphs/
+bokeh_graphs.zip
+bokeh_graphs/

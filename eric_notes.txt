@@ -1,0 +1,29 @@
+I don't need to re-state all the methods that i want to keep when inheriting, do I?
+It's no longer listing the cross-validating/pool iterations. Did we change that? Or did I break something?
+
+Questions re: results.csv -
+what the two numbers mean? The first one is the accuracy right? Is the second the standard?
+
+And why are they so high? Weren't they way lower before? Did we really just make it that much better?
+
+do we want the training passages to include non-speech as well?
+
+Is it conceiveable that we might want different training sets for different groups? 
+
+ie - before we were trying to guess where or not there should be a quote. Another approach would be to ignore quotes entirely and guess whether, based on the combination of parts of speech, that it qualifies as speech? Would be easy to get lots of training material for that using ps.py.
+
+if it finds a quote, keep going through until it finds another quote. Store the POS and tokens for that quote. Use that info as a feature.
+
+Example featureset produced by quotepoint:
+
+({'tag2': 'CS', 'token1': 'the', 'token0': 'streets', 'tag0': 'NNS', 'token2': 'as', 'tag1': 'AT'}, (19, 26), False)
+
+is that right? It looks like it's scrambling the order of tokens and tags, but i suppose that doesn't matter, right? if they're not stored in order.
+
+narrowed the problem down to the make_context function
+
+sent yields [(('chapter', 'NN'), (0, 7)), (('i', 'NN'), (8, 9)), (('as', 'CS'), (12, 14)), (('the', 'AT'), (15, 18)), (('streets', 'NNS'), (19, 26)), (('that', 'WPS'), (27, 31)), (('lead', 'NN'), (32, 36)), (('from', 'IN'), (37, 41)), (('the', 'AT'), (42, 45)), (('strand', 'NN'), (46, 52)), (('to', 'TO'), (53, 55)), (('the', 'AT'), (56, 59)), (('embankment', 'NN'), (60, 70)), (('are', 'BER'), (71, 74)), (('very', 'QL'), (75, 79)), (('narrow', 'JJ'), (80, 86)), ((',', ','), (86, 87)), (('it', 'PPS'), (88, 90)), (('is', 'BEZ'), (91, 93)), (('better', 'JJR'), (94, 100)), (('not', '*'), (101, 104)), (('to', 'TO'), (105, 107)), (('walk', 'VB'), (108, 112)), (('down', 'RP'), (113, 117)), (('them', 'PPO'), (118, 122)), (('arm', 'NN'), (123, 126)), (('-', 'NN'), (126, 127)), (('in', 'IN'), (127, 129)), (('-', 'NN'), (129, 130)), (('arm', 'NN'), (130, 133)), (('.', '.'), (133, 134))]
+
+can get to the point where make_context yields something like FeatureContext(history=[TaggedToken(token='i', tag='NN', start=8, end=9), TaggedToken(token='as', tag='CS', start=12, end=14), TaggedToken(token='the', tag='AT', start=15, end=18), TaggedToken(token='streets', tag='NNS', start=19, end=26), TaggedToken(token='that', tag='WPS', start=27, end=31)], current=TaggedToken(token='strand', tag='NN', start=46, end=52), lookahead=TaggedToken(token='to', tag='TO', start=53, end=55))
+
+but those extra tagged tokens are disappearing and it winds up being only a couple tokens. So I think the thing that needs to be updated is in get_training_features. But really this is all just an exercise in seeing if you can change anything. The next step would be to have it look at the window. If current tag is a quote marker, keep going until you find another. then store the tokens and tags in the quotes as a featureset.
